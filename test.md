@@ -8,4 +8,9 @@ Baz.
 
 ## Quux
 
-1-2-3.
+```mermaid
+graph LR
+   A --> B
+   A -->C
+   C -->D
+``` 
