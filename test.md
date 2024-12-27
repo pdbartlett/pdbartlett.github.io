@@ -11,6 +11,6 @@ Baz.
 ```mermaid
 graph LR
    A --> B
-   A -->C
-   C -->D
+   A --> C
+   C --> D
 ``` 
