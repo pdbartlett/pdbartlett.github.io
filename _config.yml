@@ -1,9 +1,0 @@
-title: pdbartlett@GitHub
-remote_theme: just-the-docs/just-the-docs
-compress_html:
-  ignore:
-    envs: all
-mermaid:
-  # Version of mermaid library
-  # Pick an available version from https://cdn.jsdelivr.net/npm/mermaid/
-  version: "9.3.0"
