@@ -4,7 +4,14 @@
     "href": "index.html",
     "title": "Home",
     "section": "",
-    "text": "Welcome\nWelcome to my own little piece of Github!\nCurrently I just have a few blog posts, giving an idea of what might be to come, but later I hope to add some longer form writing.\n\n\nBlog\n\n\n\n\n\n\n\n\n\n\nUSB C (offee)\n\n\n\n\n\n\nmisc\n\n\n\n\n\n\n\n\n\nJan 7, 2025\n\n\n\n\n\n\n\n\n\n\n\n\nA few more details…\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 6, 2025\n\n\n\n\n\n\n\n\n\n\n\n\nHappy New Year!\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 5, 2025\n\n\n\n\n\n\nNo matching items"
+    "text": "Welcome\nWelcome to my own little piece of Github!\nCurrently I just have a few blog posts, giving an idea of what might be to come, but later I hope to add some longer form writing.\n\n\nBlog\n\n\n\n\n\n\n\nBlog now live!\n\n\n\nmeta\n\n\n\n\n\n\n\nJan 8, 2025\n\n\n\n\n\n\n\n\n\n\n\nUSB C (offee)\n\n\n\nmisc\n\n\n\n\n\n\n\nJan 7, 2025\n\n\n\n\n\n\n\n\n\n\n\nA few more details…\n\n\n\nmeta\n\n\n\n\n\n\n\nJan 6, 2025\n\n\n\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "posts/2025-01-08.html",
+    "href": "posts/2025-01-08.html",
+    "title": "Blog now live!",
+    "section": "",
+    "text": "Woo-hoo! After minimal messing with configs, my Obsidian&Quarto-powered blog is now live here at pdbartlett.github.io. I’ll continue to post a copy of short-form content on Fosstodon, though, and an excerpt-plus-link for anything longer (when I get round to writing some)."
   },
   {
     "objectID": "posts/2025-01-07.html",
@@ -26,5 +33,12 @@
     "title": "A few more details…",
     "section": "",
     "text": "To expand a little on what I said yesterday, the following things are definitely top of mind to cover:\n\nthe role(s) of planning in having impact\nanalogies from business to science (e.g. alignment with velocity)\na “patterns” viewpoint (maybe starting with Balanced Scorecard)\nthe tech behind the site when it lands!"
+  },
+  {
+    "objectID": "blog.html",
+    "href": "blog.html",
+    "title": "Blog",
+    "section": "",
+    "text": "Blog now live!\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 8, 2025\n\n\n\n\n\n\n\nUSB C (offee)\n\n\n\n\n\n\nmisc\n\n\n\n\n\n\n\n\n\nJan 7, 2025\n\n\n\n\n\n\n\nA few more details…\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 6, 2025\n\n\n\n\n\n\n\nHappy New Year!\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 5, 2025\n\n\n\n\n\n\nNo matching items"
   }
 ]

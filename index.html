@@ -78,9 +78,9 @@ ul.task-list li input[type="checkbox"] {
     }
 
     const options = {
-      valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      valueNames: ['listing-title','listing-subtitle','listing-categories','listing-description','listing-date',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
       
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
+      searchColumns: ["listing-title","listing-author","listing-date","listing-image","listing-description"],
     };
 
     window['quarto-listings'] = window['quarto-listings'] || {};
@@ -150,8 +150,8 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
-<span class="menu-text">Home</span></a>
+    <a class="nav-link" href="./blog.html"> 
+<span class="menu-text">Blog</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
@@ -161,14 +161,12 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(3)</span></div><div class="category" data-category="bWV0YQ==">meta <span class="quarto-category-count">(2)</span></div><div class="category" data-category="bWlzYw==">misc <span class="quarto-category-count">(1)</span></div></div></div>
+    
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content column-page" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
@@ -177,7 +175,7 @@ window.Quarto = {
 
 
 
-<div class="quarto-title-meta">
+<div class="quarto-title-meta column-page">
 
     
   
@@ -195,98 +193,80 @@ window.Quarto = {
 <p>Currently I just have a few blog posts, giving an idea of what might be to come, but later I hope to add some longer form writing.</p>
 </section>
 <section id="blog" class="level1">
-<h1>Blog</h1>
-<div id="listing-blog" class="quarto-listing quarto-listing-container-default">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="bWlzYw==" data-listing-date-sort="1736208000000" data-listing-file-modified-sort="1736283880199" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="15">
-<div class="thumbnail">
-<p><a href="./posts/2025-01-07.html" class="no-external"></a></p><a href="./posts/2025-01-07.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/2025-01-07.html" class="no-external"></a></p>
+<h1><a href="./blog.html">Blog</a></h1>
+<div id="listing-blog" class="quarto-listing quarto-listing-container-grid">
+<div class="list grid quarto-listing-cols-3">
+<div class="g-col-1" data-index="0" data-categories="bWV0YQ==" data-listing-date-sort="1736294400000" data-listing-file-modified-sort="1736368151106" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="37">
+<a href="./posts/2025-01-08.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title" data-anchor-id="blog">
+Blog now live!
+</h5>
+<div class="listing-categories">
+<div class="listing-category" onclick="window.quartoListingCategory('bWV0YQ=='); return false;">
+meta
 </div>
-<div class="body">
-<h3 class="no-anchor listing-title" data-anchor-id="blog">
-<a href="./posts/2025-01-07.html" class="no-external">USB C (offee)</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/2025-01-07.html" class="no-external"></a>
 </div>
+<div class="card-text listing-description">
+Woo-hoo! After minimal messing with configs, my Obsidian&amp;Quarto-powered blog is now live here at pdbartlett.github.io. I’ll continue to post a copy of short-form content on…
+</div>
+<div class="card-attribution card-text-small end">
+<div class="listing-date">
+Jan 8, 2025
+</div>
+</div>
+</div>
+</div>
+</a>
+</div>
+<div class="g-col-1" data-index="1" data-categories="bWlzYw==" data-listing-date-sort="1736208000000" data-listing-file-modified-sort="1736283880199" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="15">
+<a href="./posts/2025-01-07.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+USB C (offee)
+</h5>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('bWlzYw=='); return false;">
 misc
 </div>
 </div>
-<div class="listing-description">
-<a href="./posts/2025-01-07.html" class="no-external">The wonders of the modern world: I had to recharge my coffee jar today :)</a>
+<div class="card-text listing-description">
+The wonders of the modern world: I had to recharge my coffee jar today :)
 </div>
-</div>
-<div class="metadata">
-<a href="./posts/2025-01-07.html" class="no-external">
+<div class="card-attribution card-text-small end">
 <div class="listing-date">
 Jan 7, 2025
 </div>
+</div>
+</div>
+</div>
 </a>
 </div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-categories="bWV0YQ==" data-listing-date-sort="1736121600000" data-listing-file-modified-sort="1736199124050" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="51">
-<div class="thumbnail">
-<p><a href="./posts/2025-01-06.html" class="no-external"></a></p><a href="./posts/2025-01-06.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/2025-01-06.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/2025-01-06.html" class="no-external">A few more details…</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/2025-01-06.html" class="no-external"></a>
-</div>
+<div class="g-col-1" data-index="2" data-categories="bWV0YQ==" data-listing-date-sort="1736121600000" data-listing-file-modified-sort="1736199124050" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="51">
+<a href="./posts/2025-01-06.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+A few more details…
+</h5>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('bWV0YQ=='); return false;">
 meta
 </div>
 </div>
-<div class="listing-description">
-<a href="./posts/2025-01-06.html" class="no-external">To expand a little on what I said yesterday, the following things are definitely top of mind to cover:</a>
+<div class="card-text listing-description">
+To expand a little on what I said yesterday, the following things are definitely top of mind to cover:
 </div>
-</div>
-<div class="metadata">
-<a href="./posts/2025-01-06.html" class="no-external">
+<div class="card-attribution card-text-small end">
 <div class="listing-date">
 Jan 6, 2025
 </div>
-</a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="2" data-categories="bWV0YQ==" data-listing-date-sort="1736035200000" data-listing-file-modified-sort="1736199040441" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="115">
-<div class="thumbnail">
-<p><a href="./posts/2025-01-05.html" class="no-external"></a></p><a href="./posts/2025-01-05.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/2025-01-05.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/2025-01-05.html" class="no-external">Happy New Year!</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/2025-01-05.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('bWV0YQ=='); return false;">
-meta
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2025-01-05.html" class="no-external">Happy New Year, if it’s not too late to still be saying it :)</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/2025-01-05.html" class="no-external">
-<div class="listing-date">
-Jan 5, 2025
 </div>
 </a>
-</div>
 </div>
 </div>
 <div class="listing-no-matching d-none">
