@@ -1,31 +1,38 @@
 [
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Home",
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "Paul Bartlett",
     "section": "",
-    "text": "Welcome\nWelcome to my own little piece of Github!\nCurrently I just have a few blog posts, giving an idea of what might be to come, but later I hope to add some longer form writing.\n\n\nBlog\n\n\n\n\n\n\n\nBlog now live!\n\n\n\nmeta\n\n\n\n\n\n\n\nJan 8, 2025\n\n\n\n\n\n\n\n\n\n\n\nUSB C (offee)\n\n\n\nmisc\n\n\n\n\n\n\n\nJan 7, 2025\n\n\n\n\n\n\n\n\n\n\n\nA few more details…\n\n\n\nmeta\n\n\n\n\n\n\n\nJan 6, 2025\n\n\n\n\n\n\n\n\nNo matching items"
+    "text": "I am a dabbler in many things, though mainly tech-related, and a longtime Googler of various hats."
   },
   {
-    "objectID": "posts/2025-01-08.html",
-    "href": "posts/2025-01-08.html",
-    "title": "Blog now live!",
+    "objectID": "about.html#bio",
+    "href": "about.html#bio",
+    "title": "Paul Bartlett",
     "section": "",
-    "text": "Woo-hoo! After minimal messing with configs, my Obsidian&Quarto-powered blog is now live here at pdbartlett.github.io. I’ll continue to post a copy of short-form content on Fosstodon, though, and an excerpt-plus-link for anything longer (when I get round to writing some)."
+    "text": "I am a dabbler in many things, though mainly tech-related, and a longtime Googler of various hats."
   },
   {
-    "objectID": "posts/2025-01-07.html",
-    "href": "posts/2025-01-07.html",
-    "title": "USB C (offee)",
-    "section": "",
-    "text": "The wonders of the modern world: I had to recharge my coffee jar today :)"
+    "objectID": "about.html#education",
+    "href": "about.html#education",
+    "title": "Paul Bartlett",
+    "section": "Education",
+    "text": "Education\nSidney Sussex College, Cambridge (1991–1994)\nMA(Hons) in Natural Sciences (Physics)\nKing Edwards School, Bath (1984–1991)"
   },
   {
-    "objectID": "posts/2025-01-05.html",
-    "href": "posts/2025-01-05.html",
-    "title": "Happy New Year!",
+    "objectID": "about.html#work",
+    "href": "about.html#work",
+    "title": "Paul Bartlett",
+    "section": "Work",
+    "text": "Work\nGoogle, London\n2022–present: Technical Programme Manager (Ads Quality Infra SRE)\n2017–2022: Site Reliability Manager (Ads SRE Extraction)\n2010–2017: Tech lead / Manager (Ads, various)\n2007–2010: Software Engineer (Checkout, Apps, Ads)\n2004–2007: Business Objects, Ealing\nDevelopment Manager (Enterprise Performance Management)\n2001–2004: Thomson Financial, Woking\nSoftware Engineer (Trading)\n2000–2001: INPHASE, Ascot / Denham\nSoftware Engineer (PerformancePlus EPM)\n1997–2000: CMG, London\nConsultant (Utilities)\n1994–1997: ICL / Fujitsu, Bracknell\nSoftware Engineer (OfficePower X.400)"
+  },
+  {
+    "objectID": "blog.html",
+    "href": "blog.html",
+    "title": "Blog",
     "section": "",
-    "text": "Happy New Year, if it’s not too late to still be saying it :)\nTomorrow is the “official” start of my 2025, and the news is I’m going to start trying to write a bit more (I’ll let you decide whether that is good or bad news!).\nIt’ll eventually be hosted on Github Pages, but I think a blog with just one post looks a little sad so I’ll likely not click the button on that until there’s a little bit more there.\nAlso eventually, I hope it’ll be a mix of blog posts and longer articles, and I’m also trying to tie it into habit tracking rather than doing “traditional” resolutions this year.\nBye for now!\n- Paul."
+    "text": "Blog now live!\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 8, 2025\n\n\n\n\n\n\n\nUSB C (offee)\n\n\n\n\n\n\nmisc\n\n\n\n\n\n\n\n\n\nJan 7, 2025\n\n\n\n\n\n\n\nA few more details…\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 6, 2025\n\n\n\n\n\n\n\nHappy New Year!\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 5, 2025\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "posts/2025-01-06.html",
@@ -35,10 +42,31 @@
     "text": "To expand a little on what I said yesterday, the following things are definitely top of mind to cover:\n\nthe role(s) of planning in having impact\nanalogies from business to science (e.g. alignment with velocity)\na “patterns” viewpoint (maybe starting with Balanced Scorecard)\nthe tech behind the site when it lands!"
   },
   {
-    "objectID": "blog.html",
-    "href": "blog.html",
-    "title": "Blog",
+    "objectID": "posts/2025-01-05.html",
+    "href": "posts/2025-01-05.html",
+    "title": "Happy New Year!",
     "section": "",
-    "text": "Blog now live!\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 8, 2025\n\n\n\n\n\n\n\nUSB C (offee)\n\n\n\n\n\n\nmisc\n\n\n\n\n\n\n\n\n\nJan 7, 2025\n\n\n\n\n\n\n\nA few more details…\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 6, 2025\n\n\n\n\n\n\n\nHappy New Year!\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 5, 2025\n\n\n\n\n\n\nNo matching items"
+    "text": "Happy New Year, if it’s not too late to still be saying it :)\nTomorrow is the “official” start of my 2025, and the news is I’m going to start trying to write a bit more (I’ll let you decide whether that is good or bad news!).\nIt’ll eventually be hosted on Github Pages, but I think a blog with just one post looks a little sad so I’ll likely not click the button on that until there’s a little bit more there.\nAlso eventually, I hope it’ll be a mix of blog posts and longer articles, and I’m also trying to tie it into habit tracking rather than doing “traditional” resolutions this year.\nBye for now!\n- Paul."
+  },
+  {
+    "objectID": "posts/2025-01-07.html",
+    "href": "posts/2025-01-07.html",
+    "title": "USB C (offee)",
+    "section": "",
+    "text": "The wonders of the modern world: I had to recharge my coffee jar today :)"
+  },
+  {
+    "objectID": "posts/2025-01-08.html",
+    "href": "posts/2025-01-08.html",
+    "title": "Blog now live!",
+    "section": "",
+    "text": "Woo-hoo! After minimal messing with configs, my Obsidian&Quarto-powered blog is now live here at pdbartlett.github.io. I’ll continue to post a copy of short-form content on Fosstodon, though, and an excerpt-plus-link for anything longer (when I get round to writing some)."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Home",
+    "section": "",
+    "text": "Welcome\nWelcome to my own little piece of Github!\nCurrently I just have a few blog posts, giving an idea of what might be to come, but later I hope to add some longer form writing.\n\n\nBlog\n\n\n\n\n\n\n\nBlog now live!\n\n\n\nmeta\n\n\n\n\n\n\n\nJan 8, 2025\n\n\n\n\n\n\n\n\n\n\n\nUSB C (offee)\n\n\n\nmisc\n\n\n\n\n\n\n\nJan 7, 2025\n\n\n\n\n\n\n\n\n\n\n\nA few more details…\n\n\n\nmeta\n\n\n\n\n\n\n\nJan 6, 2025\n\n\n\n\n\n\n\n\nNo matching items"
   }
 ]

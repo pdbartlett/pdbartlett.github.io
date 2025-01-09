@@ -1,6 +1,6 @@
 [
   {
-    "listing": "/index.html",
+    "listing": "/blog.html",
     "items": [
       "/posts/2025-01-08.html",
       "/posts/2025-01-07.html",
@@ -9,7 +9,7 @@
     ]
   },
   {
-    "listing": "/blog.html",
+    "listing": "/index.html",
     "items": [
       "/posts/2025-01-08.html",
       "/posts/2025-01-07.html",
