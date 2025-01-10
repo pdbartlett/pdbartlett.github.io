@@ -11,7 +11,7 @@
     "href": "blog.html",
     "title": "Blog",
     "section": "",
-    "text": "Fosstodon reply where I mention this setup\n\n\n\n\n\n\nmeta\n\n\non-fosstodon\n\n\nblogging\n\n\n\n\n\n\n\n\n\nJan 10, 2025\n\n\n\n\n\n\n\nBlog now live!\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 8, 2025\n\n\n\n\n\n\n\nUSB C (offee)\n\n\n\n\n\n\nmisc\n\n\n\n\n\n\n\n\n\nJan 7, 2025\n\n\n\n\n\n\n\nA few more details…\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 6, 2025\n\n\n\n\n\n\n\nHappy New Year!\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 5, 2025\n\n\n\n\n\n\nNo matching items"
+    "text": "Fosstodon reply where I mention this setup\n\n\n\n\n\n\nmeta\n\n\nblogging\n\n\nfosstodon\n\n\n\n\n\n\n\n\n\nJan 10, 2025\n\n\n\n\n\n\n\nBlog now live!\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 8, 2025\n\n\n\n\n\n\n\nUSB C (offee)\n\n\n\n\n\n\nmisc\n\n\n\n\n\n\n\n\n\nJan 7, 2025\n\n\n\n\n\n\n\nA few more details…\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 6, 2025\n\n\n\n\n\n\n\nHappy New Year!\n\n\n\n\n\n\nmeta\n\n\n\n\n\n\n\n\n\nJan 5, 2025\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "posts/2025-01-06.html",
@@ -25,7 +25,7 @@
     "href": "posts/2025-01-10.html",
     "title": "Fosstodon reply where I mention this setup",
     "section": "",
-    "text": "Originally posted here.\nI've gone for writing in Obsidian (mainly), generating with Quarto and\npublishing to GH Pages: [https://pdbartlett.github.io]\nhttps://pdbartlett.github.io/ \"https://pdbartlett.github.io/\"). It's still\nearly days, and I'm still copy/pasting into the \"little textbox\" here, but\nother than that it's going okay. Must check if Mastodon has its own posting\nAPI (would be nice if it supported MetaWeblog ofc!) as opposed to interop\nvia ActivityPub."
+    "text": "Originally posted here (on Fosstodon).\nI've gone for writing in Obsidian (mainly), generating with Quarto and\npublishing to GH Pages: [https://pdbartlett.github.io]\nhttps://pdbartlett.github.io/ \"https://pdbartlett.github.io/\"). It's still\nearly days, and I'm still copy/pasting into the \"little textbox\" here, but\nother than that it's going okay. Must check if Mastodon has its own posting\nAPI (would be nice if it supported MetaWeblog ofc!) as opposed to interop\nvia ActivityPub."
   },
   {
     "objectID": "posts/2025-01-05.html",
@@ -53,6 +53,6 @@
     "href": "index.html",
     "title": "Home",
     "section": "",
-    "text": "Welcome\nWelcome to my own little piece of Github!\nCurrently I just have a few blog posts, giving an idea of what might be to come, but later I hope to add some longer form writing.\n\n\nBlog\n\n\n\n\n\n\n\nFosstodon reply where I mention this setup\n\n\n\nmeta\n\n\non-fosstodon\n\n\nblogging\n\n\n\n\n\n\n\nJan 10, 2025\n\n\n\n\n\n\n\n\n\n\n\nBlog now live!\n\n\n\nmeta\n\n\n\n\n\n\n\nJan 8, 2025\n\n\n\n\n\n\n\n\n\n\n\nUSB C (offee)\n\n\n\nmisc\n\n\n\n\n\n\n\nJan 7, 2025\n\n\n\n\n\n\n\n\nNo matching items"
+    "text": "Welcome\nWelcome to my own little piece of Github!\nCurrently I just have a few blog posts, giving an idea of what might be to come, but later I hope to add some longer form writing.\n\n\nBlog\n\n\n\n\n\n\n\nFosstodon reply where I mention this setup\n\n\n\nmeta\n\n\nblogging\n\n\nfosstodon\n\n\n\n\n\n\n\nJan 10, 2025\n\n\n\n\n\n\n\n\n\n\n\nBlog now live!\n\n\n\nmeta\n\n\n\n\n\n\n\nJan 8, 2025\n\n\n\n\n\n\n\n\n\n\n\nUSB C (offee)\n\n\n\nmisc\n\n\n\n\n\n\n\nJan 7, 2025\n\n\n\n\n\n\n\n\nNo matching items"
   }
 ]
