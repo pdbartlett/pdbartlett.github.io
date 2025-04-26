@@ -2,8 +2,34 @@
  <head>
   <title>TORN Ranked War processing</title>
   <script lang="text/javascript">
+
+   const names = new Map();
+   const warAttacks = new Map();
+   const chainHits = new Map();
+   var fid, fromTS, toTS, chainsToDo, chainsDone;
+   
+   function fetchFaction() {
+    fetch('https://api.torn.com/v2/faction/basic', {
+     headers: {
+      'Authorization': 'ApiKey ' + document.getElementById('key').value,
+     }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log(data);
+      fid = data.basic.id;
+      fetchAll();
+    })
+    .catch(error => console.error('Error fetching or parsing JSON:', error));
+   }
+   
    function fetchAll() {
-    const fid = document.getElementById('fid').value;
+    console.log("Fetching all RWs for fid: " + fid);
     fetch('https://api.torn.com/v2/faction/' + fid + '/rankedwars', {
      headers: {
       'Authorization': 'ApiKey ' + document.getElementById('key').value,
@@ -27,9 +53,8 @@
     })
     .catch(error => console.error('Error fetching or parsing JSON:', error));
    }
+   
    function fetchOne(rwid) {
-    const fid = document.getElementById('fid').value;
-    var fromTS, toTS;
     fetch('https://api.torn.com/v2/faction/' + rwid + '/rankedwarreport', {
      headers: {
       'Authorization': 'ApiKey ' + document.getElementById('key').value,
@@ -47,11 +72,75 @@
      toTS = data.rankedwarreport.end;
      for (const faction of data.rankedwarreport.factions) {
       if (faction.id != fid) continue;
-      var html = "<table><thead><tr><td><b>Name</b></td><td><b>Attacks</b></td></tr></thead><tbody>";
       for (const m of faction.members) {
-       html += "<tr><td>" + m.name + "</td><td>" + m.attacks + "</td></tr>";
+       names.set(m.id, m.name)
+       warAttacks.set(m.id, m.attacks);
       }
-      html += "</tbody></table>";
+     }
+     console.log(warAttacks);
+     fetchChains();
+    })
+    .catch(error => console.error('Error fetching or parsing JSON:', error));
+   }
+
+   function fetchChains() {
+    fetch('https://api.torn.com/v2/faction/chains?limit=100&sort=ASC&to=' + toTS + '&from=' + fromTS, {
+     headers: {
+      'Authorization': 'ApiKey ' + document.getElementById('key').value,
+     }
+    })
+    .then(response => {
+     if (!response.ok) {
+      throw new Error('Network response was not ok');
+     }
+     return response.json();
+    })
+    .then(data => {
+     console.log(data);
+     chainsDone = 0;
+     chainsToDo = data.chains.length;
+     for (ch of data.chains) {
+      fetchChain(ch.id);
+     }
+    })
+    .catch(error => console.error('Error fetching or parsing JSON:', error));
+   }
+
+   function fetchChain(chid) {
+    fetch('https://api.torn.com/v2/faction/' + chid + '/chainreport', {
+      headers: {
+      'Authorization': 'ApiKey ' + document.getElementById('key').value,
+     }
+    })
+    .then(response => {
+     if (!response.ok) {
+      throw new Error('Network response was not ok');
+     }
+     return response.json();
+    })
+    .then(data => {
+     console.log(data);
+     for (a of data.chainreport.attackers) {
+      chainHits.set(a.id, a.attacks.leave + a.attacks.mug + a.attacks.hospitalize - a.attacks.war)
+     }
+     chainsDone++;
+     console.log("Chains to do: " + chainsToDo + "; chains done: " + chainsDone);
+     if (chainsToDo == chainsDone) {
+      var html = "<table><tr><td><b>User</b></td><td><b>War Attacks</b></td><td><b>Chain Hits</b></td></tr>";
+      for (id of names.keys()) {
+       html += "<tr><td>" + names.get(id) + "</td><td>" + warAttacks.get(id) + "</td>";
+       var c = 0;
+       if (chainHits.has(id)) {
+        c = chainHits.get(id);
+       }
+       html += "<td>" + c + "</td></tr>";
+      }
+      for (id of chainHits.keys()) {
+        if (!names.has(id)) {
+          html += "<tr><td>" + id + "</td><td>0</td><td>" + chainHits.get(id) + "</td></tr>";
+        }
+      }
+      html += "</table>";
       document.getElementById('data-container').innerHTML = html;
      }
     })
@@ -62,7 +151,6 @@
  <body>
   <h1>TORN Ranked War processing</h1>
   <label for="key">API key:</label> <input id="key" type="text" />
-  <label for="fid">Faction ID:</label> <input id="fid" type="text" />
-  <button type="button" onclick="fetchAll()">Fetch</button>
+  <button type="button" onclick="fetchFaction()">Fetch</button>
   <p id='data-container'></p>
 </html>
