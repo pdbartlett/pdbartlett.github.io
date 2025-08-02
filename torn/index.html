@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torn API Viewer</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for better aesthetics */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        /* Custom styles for pre-formatted JSON output */
+        pre {
+            background-color: #1f2937; /* Dark gray background */
+            color: #d1d5db; /* Light gray text */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto; /* Enable horizontal scrolling for long lines */
+            font-size: 0.875rem; /* Smaller font size for code */
+        }
+    </style>
+    <!-- Alpine.js CDN -->
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div x-data="{
+        apiKey: '',
+        responseData: null,
+        isLoading: false,
+        errorMessage: '',
+        // Function to fetch data from the Torn API
+        fetchTornData() {
+            this.isLoading = true;
+            this.errorMessage = '';
+            this.responseData = null;
+
+            // Basic validation for API key
+            if (!this.apiKey) {
+                this.errorMessage = 'Please enter your Torn API key.';
+                this.isLoading = false;
+                return;
+            }
+
+            // Construct the API URL. This example uses the 'user' endpoint with 'basic' selection.
+            // You can modify 'user' and 'selections' to query different data.
+            // For more Torn API endpoints and selections, refer to the official Torn API documentation.
+            const apiUrl = `https://api.torn.com/v2/user?selections=basic&key=${this.apiKey}`;
+
+            fetch(apiUrl)
+                .then(response => {
+                    // Check if the response is OK (status code 200)
+                    if (!response.ok) {
+                        // If not OK, throw an error with the status text
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    // Parse the JSON response
+                    return response.json();
+                })
+                .then(data => {
+                    // Check if the API response contains an error (common for Torn API)
+                    if (data.error) {
+                        this.errorMessage = `API Error: ${data.error.code} - ${data.error.error}`;
+                    } else {
+                        // Store the successful response data
+                        this.responseData = data;
+                    }
+                })
+                .catch(error => {
+                    // Catch any network errors or errors thrown in the .then block
+                    this.errorMessage = `Fetch error: ${error.message}`;
+                })
+                .finally(() => {
+                    // Always set loading to false after the fetch operation completes
+                    this.isLoading = false;
+                });
+        },
+    }" class="bg-white p-8 rounded-lg shadow-xl max-w-xl w-full">
+
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Torn API Viewer</h1>
+
+        <div class="mb-6">
+            <label for="apiKey" class="block text-gray-700 text-sm font-medium mb-2">Your Torn API Key:</label>
+            <input
+                type="text"
+                id="apiKey"
+                x-model="apiKey"
+                placeholder="Enter your Torn API key here..."
+                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+            <p class="text-sm text-gray-500 mt-2">
+                You can find your API key in your Torn preferences: <a href="https://www.torn.com/preferences.php" target="_blank" class="text-blue-600 hover:underline">Torn Preferences</a>
+            </p>
+        </div>
+
+        <button
+            @click="fetchTornData()"
+            :disabled="isLoading"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+            <span x-show="!isLoading">Fetch Torn Data</span>
+            <span x-show="isLoading" class="flex items-center justify-center">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Fetching...
+            </span>
+        </button>
+
+        <!-- Loading Indicator -->
+        <p x-show="isLoading" class="text-center text-blue-600 mt-4">Loading Torn data...</p>
+
+        <!-- Error Message Display -->
+        <div x-show="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative mt-6" role="alert">
+            <strong class="font-bold">Error!</strong>
+            <span class="block sm:inline" x-text="errorMessage"></span>
+        </div>
+
+        <!-- API Response Display -->
+        <div x-show="responseData" class="mt-6">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">API Response:</h2>
+            <pre x-text="responseData.name"></pre>
+        </div>
+
+    </div>
+</body>
+</html>

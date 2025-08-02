@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turn-Based RPG Engine</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style type="text/tailwindcss">
+        body {
+            @apply bg-slate-800 text-slate-300 font-sans;
+        }
+        .panel {
+            @apply bg-slate-900/70 border border-slate-700 rounded-lg shadow-lg p-4 backdrop-blur-sm;
+        }
+        .btn {
+            @apply bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded transition-colors duration-200 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed;
+        }
+        .btn-primary {
+            @apply bg-blue-600 hover:bg-blue-500;
+        }
+        .btn-danger {
+            @apply bg-red-700 hover:bg-red-600;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+
+//----------------------------------------------------------------------
+// 1. TYPE DEFINITIONS (Interfaces)
+// Describes the shape of our game data.
+//----------------------------------------------------------------------
+// Using interfaces would be standard, but for this self-contained example,
+// we'll rely on the structure defined in the JSON and JSDoc comments.
+
+/**
+ * @typedef {'weapon' | 'shield' | 'armor' | 'potion' | 'container' | 'key'} ItemType
+ * @typedef {'hand' | 'off-hand' | 'body'} EquipSlot
+ * @typedef {'north' | 'south' | 'east' | 'west'} Direction
+ *
+ * @typedef {Object} Stats
+ * @property {number} [attack]
+ * @property {number} [defense]
+ * @property {number} [hp]
+ *
+ * @typedef {Object} Item
+ * @property {string} id
+ * @property {string} name
+ * @property {string} description
+ * @property {ItemType} type
+ * @property {EquipSlot} [equipSlot]
+ * @property {Stats} [stats]
+ * @property {string} [opens] // For keys, the ID of the container it opens
+ * @property {boolean} [isLocked] // For containers
+ * @property {string[]} [items] // For containers
+ *
+ * @typedef {Object} Character
+ * @property {string} id
+ * @property {string} name
+ * @property {string} description
+ * @property {number} hp
+ * @property {number} maxHp
+ * @property {Stats} baseStats
+ * @property {string[]} inventoryItemIds
+ * @property {{ [key in EquipSlot]?: string }} equippedItemIds
+ * @property {string} locationId
+ *
+ * @typedef {Object} NPC
+ * @property {string} id
+ * @property {string} name
+ * @property {string} description
+ * @property {number} hp
+ * @property {number} maxHp
+ * @property {Stats} baseStats
+ * @property {string[]} inventoryItemIds
+ * @property {{ [key in EquipSlot]?: string }} equippedItemIds
+ * @property {'friendly' | 'hostile'} disposition
+ * @property {string} [dialogue]
+ *
+ * @typedef {Object} Location
+ * @property {string} id
+ * @property {string} name
+ * @property {string} description
+ * @property {{ [key in Direction]?: string }} exits
+ * @property {string[]} itemIds
+ * @property {string[]} npcIds
+ *
+ * @typedef {Object} WinCondition
+ * @property {'possessItem' | 'defeatNpc' | 'reachLocation'} type
+ * @property {string} targetId
+ *
+ * @typedef {Object} World
+ * @property {{ [key: string]: Item }} items
+ * @property {{ [key: string]: NPC }} npcs
+ * @property {{ [key: string]: Location }} locations
+ * @property {Character} player
+ * @property {string} startLocationId
+ * @property {WinCondition[]} winConditions
+ */
+
+//----------------------------------------------------------------------
+// 2. GAME DATA (JSON Object)
+// This object defines the entire game world. You can edit this to
+// create your own adventure.
+//----------------------------------------------------------------------
+/** @type {World} */
+const worldData = {
+    // ITEMS
+    items: {
+        "item-1": { id: "item-1", name: "Iron Sword", description: "A basic, but reliable sword.", type: "weapon", equipSlot: "hand", stats: { attack: 3 } },
+        "item-2": { id: "item-2", name: "Wooden Shield", description: "Offers minor protection.", type: "shield", equipSlot: "off-hand", stats: { defense: 2 } },
+        "item-3": { id: "item-3", name: "Health Potion", description: "Restores 20 HP.", type: "potion", stats: { hp: 20 } },
+        "item-4": { id: "item-4", name: "Old Chest", description: "A heavy, locked chest.", type: "container", isLocked: true, items: ["item-5"] },
+        "item-5": { id: "item-5", name: "Golden Goblet", description: "A valuable-looking goblet. Maybe it's important?", type: "key" }, // This is a quest item
+        "item-6": { id: "item-6", name: "Rusty Key", description: "A small, rusty key.", type: "key", opens: "item-4" }
+    },
+    // NPCs
+    npcs: {
+        "npc-1": {
+            id: "npc-1", name: "Goblin Sentry", description: "A grumpy goblin guarding the pass.",
+            hp: 15, maxHp: 15, disposition: "hostile",
+            baseStats: { attack: 4, defense: 1 },
+            inventoryItemIds: ["item-6"],
+            equippedItemIds: {},
+        },
+        "npc-2": {
+            id: "npc-2", name: "Elara", description: "A wise woman who seems worried.",
+            hp: 20, maxHp: 20, disposition: "friendly",
+            baseStats: { attack: 1, defense: 1 },
+            inventoryItemIds: [],
+            equippedItemIds: {},
+            dialogue: "Thank goodness you're here! A goblin stole my family's Golden Goblet! Please, get it back."
+        }
+    },
+    // LOCATIONS
+    locations: {
+        "loc-1": {
+            id: "loc-1", name: "Village Square", description: "The center of a small, quiet village. A path leads north.",
+            exits: { north: "loc-2" },
+            itemIds: [],
+            npcIds: ["npc-2"]
+        },
+        "loc-2": {
+            id: "loc-2", name: "Mountain Pass", description: "A narrow pass leading into the mountains. A chest sits on the path.",
+            exits: { south: "loc-1" },
+            itemIds: ["item-4"],
+            npcIds: ["npc-1"]
+        }
+    },
+    // PLAYER
+    player: {
+        id: "player", name: "You", description: "A budding adventurer.",
+        hp: 50, maxHp: 50, locationId: "loc-1",
+        baseStats: { attack: 2, defense: 1 },
+        inventoryItemIds: ["item-1", "item-2", "item-3"],
+        equippedItemIds: {},
+    },
+    startLocationId: "loc-1",
+    // WIN CONDITIONS
+    winConditions: [
+        { type: "possessItem", targetId: "item-5" }
+    ]
+};
+
+//----------------------------------------------------------------------
+// 3. GAME LOGIC & STATE MANAGEMENT (React Reducer)
+// This is the "engine" of the game. It takes the current state and an
+// action, and returns the new state.
+//----------------------------------------------------------------------
+const initialState = {
+    world: worldData,
+    player: { ...worldData.player, locationId: worldData.startLocationId },
+    locations: worldData.locations,
+    npcs: worldData.npcs,
+    items: worldData.items,
+    messages: ["You begin your adventure in the Village Square. " + worldData.npcs['npc-2'].dialogue],
+    gameState: "playing", // "playing", "won", "lost"
+};
+
+function gameReducer(state, action) {
+    const newState = JSON.parse(JSON.stringify(state)); // Deep copy for immutability
+    const { player, locations, npcs, items } = newState;
+    const currentLocation = locations[player.locationId];
+    let newMessages = [];
+
+    /** Helper function to get total stats for a character */
+    const getCharacterStats = (character) => {
+        const totalStats = { ...character.baseStats };
+        for (const slot in character.equippedItemIds) {
+            const itemId = character.equippedItemIds[slot];
+            if (itemId && items[itemId] && items[itemId].stats) {
+                for(const stat in items[itemId].stats) {
+                    totalStats[stat] = (totalStats[stat] || 0) + items[itemId].stats[stat];
+                }
+            }
+        }
+        return totalStats;
+    };
+    
+    /** Helper to roll a die */
+    const rollDie = (sides) => Math.floor(Math.random() * sides) + 1;
+
+    switch (action.type) {
+        case 'MOVE': {
+            const { direction } = action.payload;
+            const nextLocationId = currentLocation.exits[direction];
+            if (nextLocationId) {
+                const hostileNpcs = locations[nextLocationId].npcIds
+                    .map(id => npcs[id])
+                    .filter(npc => npc.disposition === 'hostile' && npc.hp > 0);
+                
+                if (hostileNpcs.length > 0) {
+                     newMessages.push(`You cannot move there. ${hostileNpcs[0].name} blocks the way!`);
+                } else {
+                    player.locationId = nextLocationId;
+                    newMessages.push(`You move ${direction} to ${locations[nextLocationId].name}.`);
+                }
+            }
+            break;
+        }
+
+        case 'TAKE_ITEM': {
+            const { itemId } = action.payload;
+            // Remove from location
+            currentLocation.itemIds = currentLocation.itemIds.filter(id => id !== itemId);
+            // Add to player inventory
+            player.inventoryItemIds.push(itemId);
+            newMessages.push(`You took the ${items[itemId].name}.`);
+            break;
+        }
+
+        case 'EQUIP_ITEM': {
+            const { itemId } = action.payload;
+            const item = items[itemId];
+            if (!item.equipSlot) break;
+
+            // Unequip existing item in the same slot
+            const currentEquippedId = player.equippedItemIds[item.equipSlot];
+            if (currentEquippedId) {
+                player.inventoryItemIds.push(currentEquippedId);
+            }
+
+            // Equip new item
+            player.equippedItemIds[item.equipSlot] = itemId;
+            player.inventoryItemIds = player.inventoryItemIds.filter(id => id !== itemId);
+            newMessages.push(`You equipped the ${item.name}.`);
+            break;
+        }
+        
+        case 'USE_ITEM': {
+            const { itemId } = action.payload;
+            const item = items[itemId];
+            if (item.type === 'potion') {
+                player.hp = Math.min(player.maxHp, player.hp + (item.stats.hp || 0));
+                player.inventoryItemIds = player.inventoryItemIds.filter(id => id !== itemId);
+                newMessages.push(`You used the ${item.name} and recovered ${item.stats.hp} HP.`);
+            } else if(item.type === 'key') {
+                const containerId = item.opens;
+                const container = currentLocation.itemIds.map(id => items[id]).find(i => i.id === containerId);
+                if(container && container.isLocked) {
+                    container.isLocked = false;
+                    player.inventoryItemIds = player.inventoryItemIds.filter(id => id !== itemId); // Consume key
+                    newMessages.push(`You use the ${item.name} to unlock the ${container.name}.`);
+                } else {
+                    newMessages.push("You can't use that here.");
+                }
+            }
+            break;
+        }
+
+        case 'OPEN_CONTAINER': {
+            const { itemId } = action.payload;
+            const container = items[itemId];
+            if (container.isLocked) {
+                 newMessages.push(`The ${container.name} is locked.`);
+            } else if (container.items && container.items.length > 0) {
+                 // Move items from container to the location
+                 currentLocation.itemIds.push(...container.items);
+                 container.items = []; // Empty the container
+                 // Make container "un-takeable" after opening
+                 currentLocation.itemIds = currentLocation.itemIds.filter(id => id !== itemId);
+                 newMessages.push(`You open the ${container.name} and find items inside!`);
+            } else {
+                 newMessages.push(`The ${container.name} is empty.`);
+            }
+            break;
+        }
+
+        case 'ATTACK_NPC': {
+            const { npcId } = action.payload;
+            const npc = npcs[npcId];
+            if (!npc || npc.hp <= 0) break;
+
+            const playerStats = getCharacterStats(player);
+            const npcStats = getCharacterStats(npc);
+
+            // Player attacks NPC
+            const playerDamage = Math.max(0, (playerStats.attack || 0) + rollDie(6) - (npcStats.defense || 0));
+            npc.hp = Math.max(0, npc.hp - playerDamage);
+            newMessages.push(`You attack ${npc.name} for ${playerDamage} damage!`);
+            
+            if (npc.hp <= 0) {
+                newMessages.push(`${npc.name} has been defeated!`);
+                // Drop NPC inventory onto the ground
+                if (npc.inventoryItemIds.length > 0) {
+                    currentLocation.itemIds.push(...npc.inventoryItemIds);
+                    newMessages.push(`${npc.name} dropped: ${npc.inventoryItemIds.map(id => items[id].name).join(', ')}.`);
+                    npc.inventoryItemIds = [];
+                }
+            } else {
+                // NPC retaliates
+                const npcDamage = Math.max(0, (npcStats.attack || 0) + rollDie(6) - (playerStats.defense || 0));
+                player.hp = Math.max(0, player.hp - npcDamage);
+                newMessages.push(`${npc.name} retaliates, hitting you for ${npcDamage} damage!`);
+                if (player.hp <= 0) {
+                    newMessages.push("You have been defeated... Game Over.");
+                    newState.gameState = "lost";
+                }
+            }
+            break;
+        }
+        
+        default:
+            throw new Error(`Unhandled action type: ${action.type}`);
+    }
+
+    // Check for win conditions after every turn
+    if (newState.gameState === 'playing') {
+        const checkWin = () => {
+             for (const condition of newState.world.winConditions) {
+                if (condition.type === 'possessItem' && player.inventoryItemIds.includes(condition.targetId)) {
+                    return true;
+                }
+                if (condition.type === 'defeatNpc' && (!npcs[condition.targetId] || npcs[condition.targetId].hp <= 0)) {
+                    return true;
+                }
+                if (condition.type === 'reachLocation' && player.locationId === condition.targetId) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (checkWin()) {
+            newMessages.push("Congratulations! You have won the game!");
+            newState.gameState = "won";
+        }
+    }
+    
+    newState.messages = [...newState.messages, ...newMessages].slice(-10); // Keep log from getting too long
+    return newState;
+}
+
+//----------------------------------------------------------------------
+// 4. REACT COMPONENTS
+// These components render the game state to the screen.
+//----------------------------------------------------------------------
+const HealthBar = ({ hp, maxHp, label }) => {
+    const percentage = (hp / maxHp) * 100;
+    return (
+        <div>
+            <span className="font-bold">{label}</span>
+            <div className="w-full bg-slate-700 rounded-full h-4 border border-slate-600">
+                <div className="bg-red-600 h-full rounded-full" style={{ width: `${percentage}%` }}></div>
+            </div>
+            <span className="text-sm">{hp} / {maxHp}</span>
+        </div>
+    );
+};
+
+// SVG Icon for player, showing equipped items
+const PlayerIcon = ({ player, items }) => {
+    const hasWeapon = player.equippedItemIds.hand && items[player.equippedItemIds.hand]?.type === 'weapon';
+    const hasShield = player.equippedItemIds['off-hand'] && items[player.equippedItemIds['off-hand']]?.type === 'shield';
+
+    return (
+        <svg viewBox="0 0 100 100" className="w-24 h-24">
+            {/* Base Body */}
+            <circle cx="50" cy="30" r="15" fill="#fde047" /> {/* Head */}
+            <rect x="35" y="45" width="30" height="40" rx="10" fill="#475569" /> {/* Body */}
+            {/* Equipped Items */}
+            {hasWeapon && <path d="M 80 10 L 90 20 L 40 70 L 30 60 Z" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="2" />}
+            {hasShield && <rect x="5" y="40" width="25" height="35" rx="5" fill="#ca8a04" stroke="#f59e0b" strokeWidth="2" />}
+        </svg>
+    );
+};
+// Simpler icon for NPCs
+const NpcIcon = ({ npc }) => (
+     <svg viewBox="0 0 100 100" className="w-20 h-20">
+        <circle cx="50" cy="30" r="15" fill={npc.disposition === 'hostile' ? '#dc2626' : '#22c55e' } />
+        <rect x="35" y="45" width="30" height="40" rx="10" fill="#64748b" />
+    </svg>
+);
+
+
+const PlayerStatusView = ({ player, items, dispatch }) => {
+    const inventory = player.inventoryItemIds.map(id => items[id]);
+    const equipped = Object.values(player.equippedItemIds).map(id => items[id]);
+
+    const handleItemClick = (item) => {
+        if(item.type === 'potion' || item.type === 'key') {
+            dispatch({ type: 'USE_ITEM', payload: { itemId: item.id }});
+        }
+        else if(item.equipSlot) {
+            dispatch({ type: 'EQUIP_ITEM', payload: { itemId: item.id }});
+        }
+    };
+    
+    return (
+        <div className="panel flex flex-col gap-4">
+            <h2 className="text-xl font-bold border-b border-slate-700 pb-2">Status</h2>
+            <div className="flex items-center gap-4">
+                 <PlayerIcon player={player} items={items} />
+                 <div className="flex-grow">
+                    <HealthBar hp={player.hp} maxHp={player.maxHp} label="Player HP" />
+                 </div>
+            </div>
+            <div>
+                <h3 className="font-bold">Equipped</h3>
+                <ul className="list-disc list-inside text-sm">
+                    {equipped.length > 0 ? equipped.map(item => <li key={item.id}>{item.name} ({item.equipSlot})</li>) : <li>None</li>}
+                </ul>
+            </div>
+            <div>
+                <h3 className="font-bold">Inventory</h3>
+                <div className="flex flex-col gap-1 mt-1">
+                    {inventory.length > 0 ? inventory.map(item => (
+                        <button key={item.id} onClick={() => handleItemClick(item)} className="text-left text-sm p-1 rounded hover:bg-slate-700">
+                           {item.name} <span className="text-slate-400">({item.type === 'potion' || item.equipSlot ? "Use/Equip" : item.type})</span>
+                        </button>
+                    )) : <p className="text-sm text-slate-400">Empty</p>}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const LocationView = ({ location, npcs, items, dispatch }) => {
+    const presentNpcs = location.npcIds.map(id => npcs[id]).filter(n => n.hp > 0);
+    const presentItems = location.itemIds.map(id => items[id]);
+
+    return (
+        <div className="panel flex flex-col gap-4">
+            <h2 className="text-2xl font-bold">{location.name}</h2>
+            <p className="text-slate-400 italic">{location.description}</p>
+            
+            {presentNpcs.length > 0 && <div>
+                <h3 className="font-bold text-lg mb-2">Characters Here</h3>
+                <div className="flex gap-4 items-start">
+                    {presentNpcs.map(npc => (
+                        <div key={npc.id} className="text-center p-2 rounded-lg bg-slate-800/50">
+                             <NpcIcon npc={npc} />
+                             <p className="font-bold">{npc.name}</p>
+                             <p className="text-xs">({npc.hp}/{npc.maxHp} HP)</p>
+                             {npc.disposition === 'hostile' ? (
+                                <button className="btn btn-danger text-sm mt-2" onClick={() => dispatch({ type: 'ATTACK_NPC', payload: { npcId: npc.id }})}>Attack</button>
+                             ) : (
+                                <p className="text-xs text-green-400 mt-2">Friendly</p>
+                             )}
+                        </div>
+                    ))}
+                </div>
+            </div>}
+
+            {presentItems.length > 0 && <div>
+                <h3 className="font-bold text-lg mb-2">Items on the Ground</h3>
+                <div className="flex flex-col gap-2">
+                    {presentItems.map(item => (
+                        <div key={item.id} className="flex justify-between items-center bg-slate-800/50 p-2 rounded">
+                            <div>
+                                <p className="font-bold">{item.name}</p>
+                                <p className="text-sm text-slate-400">{item.description}</p>
+                            </div>
+                            { item.type === 'container' ? (
+                                <button className="btn btn-primary" onClick={() => dispatch({ type: 'OPEN_CONTAINER', payload: { itemId: item.id }})}>Open</button>
+                            ) : (
+                                <button className="btn btn-primary" onClick={() => dispatch({ type: 'TAKE_ITEM', payload: { itemId: item.id }})}>Take</button>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </div>}
+        </div>
+    );
+};
+
+const ActionView = ({ location, dispatch }) => {
+    return (
+        <div className="panel">
+            <h2 className="text-xl font-bold mb-4">Actions</h2>
+            <div className="grid grid-cols-3 gap-2">
+                <div></div>
+                <button className="btn" disabled={!location.exits.north} onClick={() => dispatch({ type: 'MOVE', payload: { direction: 'north' }})}>North</button>
+                <div></div>
+                <button className="btn" disabled={!location.exits.west} onClick={() => dispatch({ type: 'MOVE', payload: { direction: 'west' }})}>West</button>
+                <div></div>
+                <button className="btn" disabled={!location.exits.east} onClick={() => dispatch({ type: 'MOVE', payload: { direction: 'east' }})}>East</button>
+                <div></div>
+                <button className="btn" disabled={!location.exits.south} onClick={() => dispatch({ type: 'MOVE', payload: { direction: 'south' }})}>South</button>
+                <div></div>
+            </div>
+        </div>
+    );
+};
+
+const MessageLogView = ({ messages }) => {
+    const logRef = React.useRef(null);
+    React.useEffect(() => {
+      if (logRef.current) {
+        logRef.current.scrollTop = logRef.current.scrollHeight;
+      }
+    }, [messages]);
+
+    return (
+        <div className="panel">
+            <h2 className="text-xl font-bold mb-2">Log</h2>
+            <div ref={logRef} className="h-48 overflow-y-auto bg-slate-950/50 p-2 rounded text-sm font-mono flex flex-col gap-1">
+                {messages.map((msg, index) => <p key={index} className="animate-fade-in">{`> ${msg}`}</p>)}
+            </div>
+        </div>
+    );
+};
+
+const GameOverView = ({ gameState, onRestart }) => {
+    const message = gameState === 'won' ? 'You are Victorious!' : 'You have been Defeated.';
+    const color = gameState === 'won' ? 'text-green-400' : 'text-red-500';
+
+    return (
+        <div className="absolute inset-0 bg-black/80 flex flex-col justify-center items-center z-10">
+            <h1 className={`text-6xl font-bold ${color}`}>{message}</h1>
+            <button className="btn btn-primary mt-8 text-2xl" onClick={onRestart}>Play Again</button>
+        </div>
+    );
+};
+
+
+//----------------------------------------------------------------------
+// 5. MAIN APPLICATION COMPONENT
+// This brings all the other components together.
+//----------------------------------------------------------------------
+const App = () => {
+    const [state, dispatch] = React.useReducer(gameReducer, initialState);
+    const { player, locations, npcs, items, messages, gameState } = state;
+
+    const handleRestart = () => {
+        // A full re-initialization can be complex, for this example we'll just reload.
+        window.location.reload();
+    };
+
+    const currentLocation = locations[player.locationId];
+
+    return (
+        <div className="max-w-7xl mx-auto p-4 md:p-8 min-h-screen">
+            <h1 className="text-4xl font-bold text-center mb-6">Simple RPG Engine</h1>
+            
+            {gameState !== 'playing' && <GameOverView gameState={gameState} onRestart={handleRestart}/>}
+
+            <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${gameState !== 'playing' ? 'blur-sm' : ''}`}>
+                <div className="md:col-span-2 flex flex-col gap-4">
+                    <LocationView location={currentLocation} npcs={npcs} items={items} dispatch={dispatch} />
+                </div>
+                <div className="flex flex-col gap-4">
+                    <PlayerStatusView player={player} items={items} dispatch={dispatch} />
+                </div>
+                <div className="md:col-span-2">
+                    <MessageLogView messages={messages} />
+                </div>
+                <div>
+                     <ActionView location={currentLocation} dispatch={dispatch} />
+                </div>
+            </div>
+        </div>
+    );
+};
+
+//----------------------------------------------------------------------
+// 6. RENDER THE APPLICATION
+//----------------------------------------------------------------------
+const container = document.getElementById('root');
+const root = ReactDOM.createRoot(container);
+root.render(<App />);
+
+    </script>
+</body>
+</html>

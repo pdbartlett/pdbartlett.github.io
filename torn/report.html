@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torn Faction OC Viewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for table */
+        .table-container {
+            max-height: 70vh; /* Adjust height as needed */
+            overflow-y: auto;
+        }
+        table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 p-4 sm:p-6 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-white mb-2">Torn Faction Data Viewer</h1>
+            <p class="text-gray-400">Enter your Torn API key to fetch and view your faction's member and crime data.</p>
+        </header>
+
+        <!-- Input section -->
+        <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8 flex flex-col sm:flex-row gap-4 items-end">
+            <div class="flex-grow">
+                <label for="apiKey" class="block text-sm font-medium text-gray-300 mb-2">Torn API Key</label>
+                <input type="text" id="apiKey" class="w-full bg-gray-700 border border-gray-600 text-white rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your API Key">
+            </div>
+            <button id="fetchData" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out w-full sm:w-auto">
+                Fetch Data
+            </button>
+        </div>
+
+        <!-- Message/Error Display -->
+        <div id="message" class="hidden my-4 p-4 rounded-md"></div>
+
+        <!-- Data Table -->
+        <div id="table-container" class="bg-gray-800 p-6 rounded-lg shadow-lg table-container">
+             <div id="loading" class="hidden text-center py-4 text-gray-400">Loading data...</div>
+            <table class="min-w-full divide-y divide-gray-700">
+                <thead class="bg-gray-800">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Member</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Crime</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Money Gained</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Respect Gained</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Delay / minutes</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody" class="bg-gray-800 divide-y divide-gray-700">
+                    <!-- Rows will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        // This script uses modern JavaScript (ES modules, async/await) to fetch and display data.
+
+        // Interfaces for Type Safety (emulated with JSDoc for clarity)
+        /**
+         * @typedef {Object} UserProfile
+         * @property {Object} faction
+         * @property {number} faction.faction_id
+         */
+        /**
+         * @typedef {Object.<string, Member>} Members
+         */
+        /**
+         * @typedef {Object} Member
+         * @property {string} name
+         */
+        /**
+         * @typedef {Object.<string, Crime>} Crimes
+         */
+        /**
+         * @typedef {Object} Crime
+         * @property {string} crime_name
+         * @property {number} time_ready
+         * @property {Object.<string, Participant>} participants
+         */
+        /**
+         * @typedef {Object} Participant
+         * @property {number} money_gained
+         * @property {number} respect_gained
+         */
+
+        const fetchDataButton = document.getElementById('fetchData');
+        const apiKeyInput = document.getElementById('apiKey');
+        const tableBody = document.getElementById('tableBody');
+        const messageDiv = document.getElementById('message');
+        const loadingDiv = document.getElementById('loading');
+
+        fetchDataButton.addEventListener('click', async () => {
+            console.log("Working...")
+            const apiKey = apiKeyInput.value;
+
+            if (!apiKey) {
+                showMessage('API Key is required.', 'error');
+                return;
+            }
+            
+            hideMessage();
+            tableBody.innerHTML = ''; // Clear previous results
+            loadingDiv.classList.remove('hidden');
+
+            try {
+                // Step 1: Fetch faction members and crimes concurrently
+                const [membersRes, crimesRes] = await Promise.all([
+                    fetch(`https://api.torn.com/v2/faction/members?key=${apiKey}`),
+                    fetch(`https://api.torn.com/v2/faction/crimes?cat=completed&sort=DESC&key=${apiKey}`)
+                ]);
+
+                // Check for errors in the faction API calls
+                if (!membersRes.ok) throw new Error('Failed to fetch faction members.');
+                if (!crimesRes.ok) throw new Error('Failed to fetch faction crimes.');
+
+                const membersData = await membersRes.json();
+                const crimesData = await crimesRes.json();
+
+                if (membersData.error) throw new Error(`API Error: ${membersData.error.error}`);
+                if (crimesData.error) throw new Error(`API Error: ${crimesData.error.error}`);
+
+                console.log(membersData)
+                console.log(crimesData)
+                
+                const members = membersData.members;
+                const crimes = crimesData.crimes;
+
+                // Step 2: Join data
+                const memberNames = new Map();
+                members.forEach(m => memberNames.set(m.id.toString(), m.name));
+                console.log(memberNames);
+
+                const joinedData = [];
+                Object.values(crimes).forEach(crime => {
+                    crime.participants.forEach(p => {
+                        const pid = Object.keys(p)[0];
+                        if (memberNames.has(pid)) {
+                            joinedData.push({
+                                memberName: memberNames.get(pid),
+                                crimeName: crime.crime_name,
+                                moneyGained: crime.money_gain,
+                                respectGained: crime.respect_gain,
+                                delay: Math.round((crime.time_completed - crime.time_ready) / 600) / 100,
+                            });
+                        };
+                    })
+                });
+
+                console.log(joinedData)
+
+                if (joinedData.length === 0) {
+                    showMessage('No crime data found for this faction, or no members are participating in crimes.', 'info');
+                } else {
+                    renderTable(joinedData);
+                }
+
+            } catch (error) {
+                console.error('Fetch error:', error);
+                showMessage(error.message, 'error');
+            } finally {
+                loadingDiv.classList.add('hidden');
+            }
+        });
+
+        /**
+         * Renders the joined data into the HTML table.
+         * @param {Array<Object>} data - The joined data to display.
+         */
+        function renderTable(data) {
+            tableBody.innerHTML = ''; // Clear previous data
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.classList.add('hover:bg-gray-700');
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-white">${item.memberName}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-300">${item.crimeName}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-green-400">$${item.moneyGained}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-blue-400">${item.respectGained}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-300">${item.delay}</div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        /**
+         * Displays a message to the user.
+         * @param {string} text - The message to display.
+         * @param {'info' | 'error'} type - The type of message.
+         */
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.classList.remove('hidden', 'bg-red-500', 'bg-blue-500', 'text-white');
+            if (type === 'error') {
+                messageDiv.classList.add('bg-red-900', 'border', 'border-red-400', 'text-red-300');
+            } else {
+                messageDiv.classList.add('bg-blue-900', 'border', 'border-blue-400', 'text-blue-300');
+            }
+        }
+
+        /**
+         * Hides the message div.
+         */
+        function hideMessage() {
+            messageDiv.classList.add('hidden');
+        }
+
+    </script>
+</body>
+</html>
