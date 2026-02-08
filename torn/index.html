@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torn Ranked War Data Processor</title>
+    <title>Torn Ranked War Stats Calculator</title>
     <!-- React & Babel for in-browser JSX transformation -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -198,7 +198,7 @@
                     <div className="max-w-6xl mx-auto space-y-6">
                         {/* Auth Header */}
                         <header className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                            <h1 className="text-2xl font-bold text-slate-800 mb-4">Torn Ranked War Processor</h1>
+                            <h1 className="text-2xl font-bold text-slate-800 mb-4">Torn Ranked War Stats Calculator</h1>
                             <div className="flex flex-col md:flex-row gap-4">
                                 <div className="relative flex-grow">
                                     <input
@@ -339,7 +339,7 @@
                                             {isCsvOpen && (
                                                 <div className="p-4 bg-white border-t border-slate-200">
                                                     <div className="flex justify-between items-center mb-3">
-                                                        <span className="text-xs text-slate-400 font-medium">Click <tt>Copy CSV</tt> to copy this data for pasting into Excel,  Google Sheets, etc.</span>
+                                                        <span className="text-xs text-slate-400 font-medium">Click &quot;<tt>Copy CSV</tt>&quot; to copy this data for pasting into Excel,  Google Sheets, etc.</span>
                                                         <button 
                                                             onClick={copyToClipboard} 
                                                             className="flex items-center gap-2 px-4 py-2 text-xs font-bold bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-all active:scale-95 shadow-sm"
@@ -365,7 +365,7 @@
 
                         {!factionInfo && !loading && (
                             <div className="py-24 text-center text-slate-300 italic border-2 border-dashed border-slate-200 rounded-3xl bg-white/50">
-                                Enter your API Key (public-only is fine) and click "Connect" to load faction details.
+                                Enter your API Key (public-only is fine) and click &quot;Connect&quot; to load faction details.
                             </div>
                         )}
                     </div>
