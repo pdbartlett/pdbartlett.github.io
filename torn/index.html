@@ -3,128 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torn API Viewer</title>
-    <!-- Tailwind CSS CDN for styling -->
+    <title>Torn Ranked War Data Processor</title>
+    <!-- React & Babel for in-browser JSX transformation -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom font for better aesthetics */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Light gray background */
-        }
-        /* Custom styles for pre-formatted JSON output */
-        pre {
-            background-color: #1f2937; /* Dark gray background */
-            color: #d1d5db; /* Light gray text */
-            padding: 1rem;
-            border-radius: 0.5rem;
-            overflow-x: auto; /* Enable horizontal scrolling for long lines */
-            font-size: 0.875rem; /* Smaller font size for code */
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
     </style>
-    <!-- Alpine.js CDN -->
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
-    <div x-data="{
-        apiKey: '',
-        responseData: null,
-        isLoading: false,
-        errorMessage: '',
-        // Function to fetch data from the Torn API
-        fetchTornData() {
-            this.isLoading = true;
-            this.errorMessage = '';
-            this.responseData = null;
+<body class="bg-slate-50">
+    <div id="root"></div>
 
-            // Basic validation for API key
-            if (!this.apiKey) {
-                this.errorMessage = 'Please enter your Torn API key.';
-                this.isLoading = false;
-                return;
-            }
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
 
-            // Construct the API URL. This example uses the 'user' endpoint with 'basic' selection.
-            // You can modify 'user' and 'selections' to query different data.
-            // For more Torn API endpoints and selections, refer to the official Torn API documentation.
-            const apiUrl = `https://api.torn.com/v2/user?selections=basic&key=${this.apiKey}`;
+        // Simple Inline SVG Icons to prevent library-loading crashes
+        const Icons = {
+            Eye: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>,
+            EyeOff: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>,
+            Loader: () => <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>,
+            ChevronDown: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>,
+            ChevronUp: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>,
+            Clipboard: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>,
+            Alert: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+            Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        };
 
-            fetch(apiUrl)
-                .then(response => {
-                    // Check if the response is OK (status code 200)
-                    if (!response.ok) {
-                        // If not OK, throw an error with the status text
-                        throw new Error(`HTTP error! status: ${response.status}`);
+        const App = () => {
+            const [apiKey, setApiKey] = useState('');
+            const [isApiKeyVisible, setIsApiKeyVisible] = useState(false);
+            const [factionInfo, setFactionInfo] = useState(null);
+            const [rankedWars, setRankedWars] = useState([]);
+            const [selectedWarId, setSelectedWarId] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [loadingStep, setLoadingStep] = useState('');
+            const [error, setError] = useState(null);
+            const [warData, setWarData] = useState(null);
+            const [isCsvOpen, setIsCsvOpen] = useState(false);
+            const [copied, setCopied] = useState(false);
+
+            const fetchWithRetry = async (url, options, retries = 5, backoff = 1000) => {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) throw new Error(`Torn API Error: ${response.status}`);
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.error.error || 'Unknown API Error');
+                    return data;
+                } catch (err) {
+                    if (retries > 0) {
+                        await new Promise(resolve => setTimeout(resolve, backoff));
+                        return fetchWithRetry(url, options, retries - 1, backoff * 2);
                     }
-                    // Parse the JSON response
-                    return response.json();
-                })
-                .then(data => {
-                    // Check if the API response contains an error (common for Torn API)
-                    if (data.error) {
-                        this.errorMessage = `API Error: ${data.error.code} - ${data.error.error}`;
-                    } else {
-                        // Store the successful response data
-                        this.responseData = data;
+                    throw err;
+                }
+            };
+
+            const handleConnect = async () => {
+                if (!apiKey) return;
+                setLoading(true);
+                setError(null);
+                setLoadingStep('Connecting to Faction...');
+                setWarData(null);
+                
+                try {
+                    const authHeader = { 'Authorization': `ApiKey ${apiKey}` };
+                    const bfiData = await fetchWithRetry('https://api.torn.com/v2/faction/basic', { headers: authHeader });
+                    setFactionInfo(bfiData.basic);
+
+                    setLoadingStep('Checking Ranked Wars...');
+                    const rwsData = await fetchWithRetry('https://api.torn.com/v2/faction/rankedwars', { headers: authHeader });
+                    const wars = rwsData.rankedwars || [];
+                    setRankedWars(wars);
+                    
+                    if (wars.length > 0) {
+                        setSelectedWarId(wars[0].id.toString());
                     }
-                })
-                .catch(error => {
-                    // Catch any network errors or errors thrown in the .then block
-                    this.errorMessage = `Fetch error: ${error.message}`;
-                })
-                .finally(() => {
-                    // Always set loading to false after the fetch operation completes
-                    this.isLoading = false;
-                });
-        },
-    }" class="bg-white p-8 rounded-lg shadow-xl max-w-xl w-full">
+                } catch (err) {
+                    setError(err.message);
+                    setFactionInfo(null);
+                } finally {
+                    setLoading(false);
+                    setLoadingStep('');
+                }
+            };
 
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Torn API Viewer</h1>
+            const fetchWarDetails = async (warId) => {
+                if (!warId || !apiKey || !factionInfo) return;
+                setLoading(true);
+                setError(null);
+                setLoadingStep('Fetching War Report...');
+                
+                try {
+                    const authHeader = { 'Authorization': `ApiKey ${apiKey}` };
+                    const myFactionId = factionInfo.id.toString();
+                    
+                    const rwrData = await fetchWithRetry(`https://api.torn.com/v2/faction/${warId}/rankedwarreport`, { headers: authHeader });
+                    const reportData = rwrData.rankedwarreport;
+                    const { start, end } = reportData;
 
-        <div class="mb-6">
-            <label for="apiKey" class="block text-gray-700 text-sm font-medium mb-2">Your Torn API Key:</label>
-            <input
-                type="text"
-                id="apiKey"
-                x-model="apiKey"
-                placeholder="Enter your Torn API key here..."
-                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-            <p class="text-sm text-gray-500 mt-2">
-                You can find your API key in your Torn preferences: <a href="https://www.torn.com/preferences.php" target="_blank" class="text-blue-600 hover:underline">Torn Preferences</a>
-            </p>
-        </div>
+                    let membersMap = {};
+                    const targetFaction = reportData.factions.find(f => f.id.toString() === myFactionId);
+                    
+                    if (!targetFaction) throw new Error("Current faction not found in this war report.");
 
-        <button
-            @click="fetchTornData()"
-            :disabled="isLoading"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-            <span x-show="!isLoading">Fetch Torn Data</span>
-            <span x-show="isLoading" class="flex items-center justify-center">
-                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Fetching...
-            </span>
-        </button>
+                    targetFaction.members.forEach(m => {
+                        membersMap[m.id.toString()] = {
+                            id: m.id,
+                            name: m.name,
+                            war_hits: Number(m.attacks || 0),
+                            leaves: 0, mugs: 0, hosps: 0, losses: 0, respect: 0, bonus_hits: 0
+                        };
+                    });
 
-        <!-- Loading Indicator -->
-        <p x-show="isLoading" class="text-center text-blue-600 mt-4">Loading Torn data...</p>
+                    setLoadingStep('Locating Faction Chains...');
+                    const chainsData = await fetchWithRetry(`https://api.torn.com/v2/faction/chains?limit=100&sort=ASC&from=${start}&to=${end}`, { headers: authHeader });
+                    const chains = chainsData.chains || [];
 
-        <!-- Error Message Display -->
-        <div x-show="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative mt-6" role="alert">
-            <strong class="font-bold">Error!</strong>
-            <span class="block sm:inline" x-text="errorMessage"></span>
-        </div>
+                    for (let i = 0; i < chains.length; i++) {
+                        setLoadingStep(`Processing Chain ${i + 1} of ${chains.length}...`);
+                        const crData = await fetchWithRetry(`https://api.torn.com/v2/faction/${chains[i].id}/chainreport`, { headers: authHeader });
+                        const report = crData.chainreport;
+                        
+                        if (report && report.attackers) {
+                            report.attackers.forEach(att => {
+                                const uid = att.id.toString();
+                                if (membersMap[uid]) {
+                                    const stats = att.attacks || {};
+                                    // FORCE ALL NUMERIC VALUES TO BE NUMBERS
+                                    membersMap[uid].leaves += Number(stats.leave || 0);
+                                    membersMap[uid].mugs += Number(stats.mug || 0);
+                                    membersMap[uid].hosps += Number(stats.hospitalize || 0);
+                                    membersMap[uid].losses += Number(stats.loss || 0);
+                                    membersMap[uid].respect += Number(att.respect || 0);
+                                    membersMap[uid].bonus_hits += Number(att.bonus || 0);
+                                }
+                            });
+                        }
+                    }
+                    setWarData(Object.values(membersMap).sort((a, b) => b.war_hits - a.war_hits));
+                } catch (err) {
+                    setError("Failed to fetch war details: " + err.message);
+                } finally {
+                    setLoading(false);
+                    setLoadingStep('');
+                }
+            };
 
-        <!-- API Response Display -->
-        <div x-show="responseData" class="mt-6">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4">API Response:</h2>
-            <pre x-text="responseData.name"></pre>
-        </div>
+            useEffect(() => {
+                if (selectedWarId && factionInfo) {
+                    fetchWarDetails(selectedWarId);
+                }
+            }, [selectedWarId]);
 
-    </div>
+            const csvContent = useMemo(() => {
+                if (!warData) return '';
+                const header = 'Member ID,Name,War Hits,Leaves,Mugs,Hospitalizations,Losses,Respect,Bonus Hits\n';
+                const rows = warData.map(m => {
+                    const r = Number(m.respect || 0);
+                    return `${m.id},"${m.name}",${m.war_hits},${m.leaves},${m.mugs},${m.hosps},${m.losses},${r.toFixed(2)},${m.bonus_hits}`;
+                }).join('\n');
+                return header + rows;
+            }, [warData]);
+
+            const copyToClipboard = () => {
+                const el = document.createElement('textarea');
+                el.value = csvContent;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-50 text-slate-900 p-4 md:p-8">
+                    <div className="max-w-6xl mx-auto space-y-6">
+                        {/* Auth Header */}
+                        <header className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                            <h1 className="text-2xl font-bold text-slate-800 mb-4">Torn Ranked War Processor</h1>
+                            <div className="flex flex-col md:flex-row gap-4">
+                                <div className="relative flex-grow">
+                                    <input
+                                        type={isApiKeyVisible ? "text" : "password"}
+                                        placeholder="Enter Full API Key"
+                                        value={apiKey}
+                                        onChange={(e) => setApiKey(e.target.value)}
+                                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none pr-10"
+                                    />
+                                    <button 
+                                        onClick={() => setIsApiKeyVisible(!isApiKeyVisible)} 
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                    >
+                                        {isApiKeyVisible ? <Icons.EyeOff /> : <Icons.Eye />}
+                                    </button>
+                                </div>
+                                <button 
+                                    onClick={handleConnect} 
+                                    disabled={loading || !apiKey} 
+                                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all"
+                                >
+                                    {loading && loadingStep.includes('Connection') && <Icons.Loader />}
+                                    Connect
+                                </button>
+                            </div>
+                            {error && (
+                                <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-100 flex items-center gap-2">
+                                    <Icons.Alert />
+                                    {error}
+                                </div>
+                            )}
+                        </header>
+
+                        {/* Faction Interface */}
+                        {factionInfo && (
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 animate-in fade-in duration-300">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b pb-6">
+                                    <div>
+                                        <h2 className="text-xl font-bold text-slate-800">{factionInfo.name} [{factionInfo.tag}]</h2>
+                                        <p className="text-sm text-slate-500 font-medium">Rank: {factionInfo.rank?.name || 'Unknown'}</p>
+                                    </div>
+                                    <div className="w-full md:w-80">
+                                        <label className="block text-xs font-bold text-slate-400 uppercase mb-1 tracking-tight">Select Ranked War</label>
+                                        <select 
+                                            value={selectedWarId} 
+                                            onChange={(e) => setSelectedWarId(e.target.value)} 
+                                            disabled={loading} 
+                                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm cursor-pointer hover:border-blue-300 transition-colors"
+                                        >
+                                            <option value="">-- Choose a War --</option>
+                                            {rankedWars.map(rw => (
+                                                <option key={rw.id} value={rw.id}>
+                                                    vs {rw.factions.find(f => f.id.toString() !== factionInfo.id.toString())?.name || 'Unknown'}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {loading ? (
+                                    <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+                                        <div className="mb-4 text-blue-600 scale-150">
+                                            <Icons.Loader />
+                                        </div>
+                                        <p className="text-sm font-semibold animate-pulse">{loadingStep}</p>
+                                    </div>
+                                ) : warData ? (
+                                    <div className="space-y-6">
+                                        <div className="overflow-x-auto rounded-xl border border-slate-100 shadow-inner">
+                                            <table className="w-full text-left text-xs border-collapse">
+                                                <thead>
+                                                    <tr className="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-200">
+                                                        <th className="px-4 py-4 sticky left-0 bg-slate-50 z-20">Member</th>
+                                                        <th className="px-3 py-4 text-center bg-blue-50/50 text-blue-700">War Hits</th>
+                                                        <th className="px-3 py-4 text-center">Leaves</th>
+                                                        <th className="px-3 py-4 text-center">Mugs</th>
+                                                        <th className="px-3 py-4 text-center">Hosps</th>
+                                                        <th className="px-3 py-4 text-center">Losses</th>
+                                                        <th className="px-3 py-4 text-center text-green-700">Respect</th>
+                                                        <th className="px-3 py-4 text-center text-amber-700">Bonus</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {warData.map((m) => (
+                                                        <tr key={m.id} className="hover:bg-slate-50 transition-colors">
+                                                            <td className="px-4 py-3 sticky left-0 bg-white border-r border-slate-50">
+                                                                <div className="font-bold text-slate-800">{m.name}</div>
+                                                                <div className="text-[10px] text-slate-400 font-mono">{m.id}</div>
+                                                            </td>
+                                                            <td className="px-3 py-3 text-center font-bold text-blue-600 bg-blue-50/10">{m.war_hits}</td>
+                                                            <td className="px-3 py-3 text-center text-slate-600">{m.leaves}</td>
+                                                            <td className="px-3 py-3 text-center text-slate-600">{m.mugs}</td>
+                                                            <td className="px-3 py-3 text-center text-slate-600">{m.hosps}</td>
+                                                            <td className="px-3 py-3 text-center text-red-500">{m.losses}</td>
+                                                            <td className="px-3 py-3 text-center font-semibold text-green-600">
+                                                                {Number(m.respect || 0).toFixed(1)}
+                                                            </td>
+                                                            <td className="px-3 py-3 text-center font-semibold text-amber-600">{m.bonus_hits}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        
+                                        {/* Zippie / Accordion for CSV */}
+                                        <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
+                                            <button 
+                                                onClick={() => setIsCsvOpen(!isCsvOpen)} 
+                                                className="w-full flex items-center justify-between px-5 py-4 text-slate-700 font-bold hover:bg-slate-100 transition-colors"
+                                            >
+                                                <span className="flex items-center gap-2"><Icons.Clipboard />Raw CSV Export</span>
+                                                {isCsvOpen ? <Icons.ChevronUp /> : <Icons.ChevronDown />}
+                                            </button>
+                                            {isCsvOpen && (
+                                                <div className="p-4 bg-white border-t border-slate-200">
+                                                    <div className="flex justify-between items-center mb-3">
+                                                        <span className="text-xs text-slate-400 font-medium">Click copy to export this data to Excel or Google Sheets.</span>
+                                                        <button 
+                                                            onClick={copyToClipboard} 
+                                                            className="flex items-center gap-2 px-4 py-2 text-xs font-bold bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-all active:scale-95 shadow-sm"
+                                                        >
+                                                            {copied ? <Icons.Check /> : <Icons.Clipboard />}
+                                                            {copied ? "Copied!" : "Copy CSV"}
+                                                        </button>
+                                                    </div>
+                                                    <pre className="bg-slate-900 text-slate-300 p-4 rounded-xl text-[11px] font-mono overflow-x-auto max-h-80 whitespace-pre shadow-inner">
+                                                        {csvContent}
+                                                    </pre>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="py-20 text-center text-slate-400 font-medium bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                                        Select a ranked war from the dropdown to load member data.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {!factionInfo && !loading && (
+                            <div className="py-24 text-center text-slate-300 italic border-2 border-dashed border-slate-200 rounded-3xl bg-white/50">
+                                Enter your API Key and click "Connect" to load faction details.
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
