@@ -236,7 +236,11 @@
                         {warData && (
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                                 <h2 className="text-xl font-bold text-slate-800">Notes</h2>
-                                TODO...
+                                <ol className="list-inside list-decimal">
+                                    <li><tt>Total Attacks</tt> and <tt>Score</tt> refer to the whole war, but do not include outside hits</li>
+                                    <li>All the other columns are totals over all chains in the war, so include outside hits but not &quot;pre-chains&quotl of &lt;10 hits</li>
+                                    <li>Non-chain outside hits are not included at all</li>
+                                </ol>
                             </div>
                         )}
 
