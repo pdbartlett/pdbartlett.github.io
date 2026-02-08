@@ -232,10 +232,13 @@
                             )}
                         </header>
 
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                            <h2 className="text-xl font-bold text-slate-800">Notes</h2>
-                            TODO...
-                        </div>
+                        {/* Notes */}
+                        {warData && (
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                                <h2 className="text-xl font-bold text-slate-800">Notes</h2>
+                                TODO...
+                            </div>
+                        )}
 
                         {/* Faction Interface */}
                         {factionInfo && (
