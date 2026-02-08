@@ -116,8 +116,8 @@
                             name: m.name,
                             attacks: Number(m.attacks || 0),
                             score: Number(m.score || 0),
-                            respect: 0, total: 0, leaves: 0, mugs: 0, hosps: 0, assists: 0, retals: 0, overseas: 0, draws: 0, escapes: 0,
-                            losses: 0, war_hits: 0, bonuses: 0,
+                            respect: 0, total: 0, leaves: 0, mugs: 0, hosps: 0, assists: 0, retals: 0,
+                            losses: 0, war_hits: 0, bonus_respect: 0,
                         };
                     });
 
@@ -129,7 +129,14 @@
                         setLoadingStep(`Processing Chain ${i + 1} of ${chains.length}...`);
                         const crData = await fetchWithRetry(`https://api.torn.com/v2/faction/${chains[i].id}/chainreport`, { headers: authHeader });
                         const report = crData.chainreport;
-                        
+                        if (report && report.bonuses) {
+                            report.bonuses.forEach(bonus => {
+                                const uid = bonus.attacker_id;
+                                if (membersMap[uid]) {
+                                    membersMap[uid].bonus_respect += Number(bonus.respect || 0);
+                                }
+                            });
+                        }
                         if (report && report.attackers) {
                             report.attackers.forEach(att => {
                                 const uid = att.id.toString();
@@ -142,12 +149,8 @@
                                     membersMap[uid].hosps += Number(stats.hospitalize || 0);
                                     membersMap[uid].assists += Number(stats.assists || 0);
                                     membersMap[uid].retals += Number(stats.retaliations || 0);
-                                    membersMap[uid].overseas += Number(stats.overseas || 0);
-                                    membersMap[uid].draws += Number(stats.draws || 0);
-                                    membersMap[uid].escapes += Number(stats.escapes || 0);
                                     membersMap[uid].losses += Number(stats.losses || 0);
-                                    membersMap[uid].war_hits += Number(att.war || 0);
-                                    membersMap[uid].bonuses += Number(att.bonuses || 0);
+                                    membersMap[uid].war_hits += Number(stats.war || 0);
                                 }
                             });
                         }
@@ -169,11 +172,11 @@
 
             const csvContent = useMemo(() => {
                 if (!warData) return '';
-                const header = 'Member ID,Name,Attacks,Score,Respect,Total Attacks,Leaves,Mugs,Hosps,Assists,Retals,Overseas,Draws,Escapes,Losses,War Hits,Bonuses\n';
+                const header = 'Member ID,Name,Total Attacks,Score,Chain Respect,Chain Attacks,Leaves,Mugs,Hosps,Assists,Retals,Losses,War Hits,Bonus Respect\n';
                 const rows = warData.map(m => {
                     const s = Number(m.score || 0);
                     const r = Number(m.respect || 0);
-                    return `${m.id},"${m.name}",${m.attacks},${s.toFixed(2)},${r.toFixed(2)},${m.total},${m.leaves},${m.mugs},${m.hosps},${m.assists},${m.retals},${m.overseas},${m.draws},${m.escapes},${m.losses},${m.war_hits},${m.bonus_hits}`;
+                    return `${m.id},"${m.name}",${m.attacks},${s.toFixed(2)},${r.toFixed(2)},${m.total},${m.leaves},${m.mugs},${m.hosps},${m.assists},${m.retals},${m.losses},${m.war_hits},${m.bonus_respect}`;
                 }).join('\n');
                 return header + rows;
             }, [warData]);
@@ -268,21 +271,18 @@
                                                 <thead>
                                                     <tr className="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-200">
                                                         <th className="px-4 py-4 sticky left-0 bg-slate-50 z-20">Member</th>
-                                                        <th className="px-3 py-4 text-center bg-blue-50/50 text-blue-700">Attacks</th>
+                                                        <th className="px-3 py-4 text-center bg-blue-50/50 text-blue-700">Total Attacks</th>
                                                         <th className="px-3 py-4 text-center">Score</th>
-                                                        <th className="px-3 py-4 text-center">Respect</th>
-                                                        <th className="px-3 py-4 text-center">Total Hits</th>
+                                                        <th className="px-3 py-4 text-center">Chain Respect</th>
+                                                        <th className="px-3 py-4 text-center">Chain Attacks</th>
                                                         <th className="px-3 py-4 text-center">Leaves</th>
                                                         <th className="px-3 py-4 text-center">Mugs</th>
                                                         <th className="px-3 py-4 text-center">Hosps</th>
                                                         <th className="px-3 py-4 text-center">Assists</th>
                                                         <th className="px-3 py-4 text-center">Retals</th>
-                                                        <th className="px-3 py-4 text-center">Overseas</th>
-                                                        <th className="px-3 py-4 text-center">Draws</th>
-                                                        <th className="px-3 py-4 text-center">Escapes</th>
                                                         <th className="px-3 py-4 text-center">Losses</th>
                                                         <th className="px-3 py-4 text-center">War Hits</th>
-                                                        <th className="px-3 py-4 text-center">Bonuses</th>
+                                                        <th className="px-3 py-4 text-center">Bonus Respect</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100">
@@ -296,7 +296,7 @@
                                                             <td className="px-3 py-3 text-center font-semibold text-slate-600">
                                                                 {Number(m.score || 0).toFixed(1)}
                                                             </td>
-                                                            <td className="px-3 py-3 text-center font-semibold text-green-600">
+                                                            <td className="px-3 py-3 text-center font-semibold text-slate-600">
                                                                 {Number(m.respect || 0).toFixed(1)}
                                                             </td>
                                                             <td className="px-3 py-3 text-center text-slate-600">{m.total}</td>
@@ -305,12 +305,9 @@
                                                             <td className="px-3 py-3 text-center text-slate-600">{m.hosps}</td>
                                                             <td className="px-3 py-3 text-center text-slate-600">{m.assists}</td>
                                                             <td className="px-3 py-3 text-center text-slate-600">{m.retals}</td>
-                                                            <td className="px-3 py-3 text-center text-slate-600">{m.overseas}</td>
-                                                            <td className="px-3 py-3 text-center text-slate-600">{m.draws}</td>
-                                                            <td className="px-3 py-3 text-center text-slate-600">{m.escapes}</td>
                                                             <td className="px-3 py-3 text-center text-red-500">{m.losses}</td>
                                                             <td className="px-3 py-3 text-center text-slate-600">{m.war_hits}</td>
-                                                            <td className="px-3 py-3 text-center font-semibold text-amber-600">{m.bonuses}</td>
+                                                            <td className="px-3 py-3 text-center text-amber-600">{m.bonus_respect}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
