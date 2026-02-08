@@ -66,7 +66,7 @@
                 if (!apiKey) return;
                 setLoading(true);
                 setError(null);
-                setLoadingStep('Connecting to Faction...');
+                setLoadingStep('Fetching faction info...');
                 setWarData(null);
                 
                 try {
@@ -74,7 +74,7 @@
                     const bfiData = await fetchWithRetry('https://api.torn.com/v2/faction/basic', { headers: authHeader });
                     setFactionInfo(bfiData.basic);
 
-                    setLoadingStep('Checking Ranked Wars...');
+                    setLoadingStep('Getting list of ranked wars...');
                     const rwsData = await fetchWithRetry('https://api.torn.com/v2/faction/rankedwars', { headers: authHeader });
                     const wars = rwsData.rankedwars || [];
                     setRankedWars(wars);
@@ -95,7 +95,7 @@
                 if (!warId || !apiKey || !factionInfo) return;
                 setLoading(true);
                 setError(null);
-                setLoadingStep('Fetching War Report...');
+                setLoadingStep('Fetching ranked war report...');
                 
                 try {
                     const authHeader = { 'Authorization': `ApiKey ${apiKey}` };
@@ -121,13 +121,14 @@
                         };
                     });
 
-                    setLoadingStep('Locating Faction Chains...');
+                    setLoadingStep('Getting list of chains during the war...');
                     const chainsData = await fetchWithRetry(`https://api.torn.com/v2/faction/chains?limit=100&sort=ASC&from=${start}&to=${end}`, { headers: authHeader });
                     const chains = chainsData.chains || [];
 
                     for (let i = 0; i < chains.length; i++) {
-                        setLoadingStep(`Processing Chain ${i + 1} of ${chains.length}...`);
+                        setLoadingStep(`Fetching chain ${i + 1} of ${chains.length}...`);
                         const crData = await fetchWithRetry(`https://api.torn.com/v2/faction/${chains[i].id}/chainreport`, { headers: authHeader });
+                        setLoadingStep(`Processing chain ${i + 1} of ${chains.length}...`);
                         const report = crData.chainreport;
                         if (report && report.bonuses) {
                             report.bonuses.forEach(bonus => {
@@ -202,7 +203,7 @@
                                 <div className="relative flex-grow">
                                     <input
                                         type={isApiKeyVisible ? "text" : "password"}
-                                        placeholder="Enter Torn API Key (public)"
+                                        placeholder="Enter Torn API key"
                                         value={apiKey}
                                         onChange={(e) => setApiKey(e.target.value)}
                                         className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none pr-10"
@@ -230,6 +231,11 @@
                                 </div>
                             )}
                         </header>
+
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                            <h2 className="text-xl font-bold text-slate-800">Notes</h2>
+                            TODO...
+                        </div>
 
                         {/* Faction Interface */}
                         {factionInfo && (
@@ -352,7 +358,7 @@
 
                         {!factionInfo && !loading && (
                             <div className="py-24 text-center text-slate-300 italic border-2 border-dashed border-slate-200 rounded-3xl bg-white/50">
-                                Enter your API Key and click "Connect" to load faction details.
+                                Enter your API Key (public-only is fine) and click "Connect" to load faction details.
                             </div>
                         )}
                     </div>
