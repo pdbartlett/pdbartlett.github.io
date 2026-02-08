@@ -114,8 +114,10 @@
                         membersMap[m.id.toString()] = {
                             id: m.id,
                             name: m.name,
-                            war_hits: Number(m.attacks || 0),
-                            leaves: 0, mugs: 0, hosps: 0, losses: 0, respect: 0, bonus_hits: 0
+                            attacks: Number(m.attacks || 0),
+                            score: Number(m.score || 0),
+                            respect: 0, total: 0, leaves: 0, mugs: 0, hosps: 0, assists: 0, retals: 0, overseas: 0, draws: 0, escapes: 0,
+                            losses: 0, war_hits: 0, bonuses: 0,
                         };
                     });
 
@@ -132,19 +134,25 @@
                             report.attackers.forEach(att => {
                                 const uid = att.id.toString();
                                 if (membersMap[uid]) {
+                                    membersMap[uid].respect += Number(att.respect.total || 0);
                                     const stats = att.attacks || {};
-                                    // FORCE ALL NUMERIC VALUES TO BE NUMBERS
+                                    membersMap[uid].total += Number(stats.total || 0);
                                     membersMap[uid].leaves += Number(stats.leave || 0);
                                     membersMap[uid].mugs += Number(stats.mug || 0);
                                     membersMap[uid].hosps += Number(stats.hospitalize || 0);
-                                    membersMap[uid].losses += Number(stats.loss || 0);
-                                    membersMap[uid].respect += Number(att.respect || 0);
-                                    membersMap[uid].bonus_hits += Number(att.bonus || 0);
+                                    membersMap[uid].assists += Number(stats.assists || 0);
+                                    membersMap[uid].retals += Number(stats.retaliations || 0);
+                                    membersMap[uid].overseas += Number(stats.overseas || 0);
+                                    membersMap[uid].draws += Number(stats.draws || 0);
+                                    membersMap[uid].escapes += Number(stats.escapes || 0);
+                                    membersMap[uid].losses += Number(stats.losses || 0);
+                                    membersMap[uid].war_hits += Number(att.war || 0);
+                                    membersMap[uid].bonuses += Number(att.bonuses || 0);
                                 }
                             });
                         }
                     }
-                    setWarData(Object.values(membersMap).sort((a, b) => b.war_hits - a.war_hits));
+                    setWarData(Object.values(membersMap).sort((a, b) => b.score - a.score));
                 } catch (err) {
                     setError("Failed to fetch war details: " + err.message);
                 } finally {
@@ -161,10 +169,11 @@
 
             const csvContent = useMemo(() => {
                 if (!warData) return '';
-                const header = 'Member ID,Name,War Hits,Leaves,Mugs,Hospitalizations,Losses,Respect,Bonus Hits\n';
+                const header = 'Member ID,Name,Attacks,Score,Respect,Total Attacks,Leaves,Mugs,Hosps,Assists,Retals,Overseas,Draws,Escapes,Losses,War Hits,Bonuses\n';
                 const rows = warData.map(m => {
+                    const s = Number(m.score || 0);
                     const r = Number(m.respect || 0);
-                    return `${m.id},"${m.name}",${m.war_hits},${m.leaves},${m.mugs},${m.hosps},${m.losses},${r.toFixed(2)},${m.bonus_hits}`;
+                    return `${m.id},"${m.name}",${m.attacks},${s.toFixed(2)},${r.toFixed(2)},${m.total},${m.leaves},${m.mugs},${m.hosps},${m.assists},${m.retals},${m.overseas},${m.draws},${m.escapes},${m.losses},${m.war_hits},${m.bonus_hits}`;
                 }).join('\n');
                 return header + rows;
             }, [warData]);
@@ -259,13 +268,21 @@
                                                 <thead>
                                                     <tr className="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-200">
                                                         <th className="px-4 py-4 sticky left-0 bg-slate-50 z-20">Member</th>
-                                                        <th className="px-3 py-4 text-center bg-blue-50/50 text-blue-700">War Hits</th>
+                                                        <th className="px-3 py-4 text-center bg-blue-50/50 text-blue-700">Attacks</th>
+                                                        <th className="px-3 py-4 text-center">Score</th>
+                                                        <th className="px-3 py-4 text-center">Respect</th>
+                                                        <th className="px-3 py-4 text-center">Total Hits</th>
                                                         <th className="px-3 py-4 text-center">Leaves</th>
                                                         <th className="px-3 py-4 text-center">Mugs</th>
                                                         <th className="px-3 py-4 text-center">Hosps</th>
+                                                        <th className="px-3 py-4 text-center">Assists</th>
+                                                        <th className="px-3 py-4 text-center">Retals</th>
+                                                        <th className="px-3 py-4 text-center">Overseas</th>
+                                                        <th className="px-3 py-4 text-center">Draws</th>
+                                                        <th className="px-3 py-4 text-center">Escapes</th>
                                                         <th className="px-3 py-4 text-center">Losses</th>
-                                                        <th className="px-3 py-4 text-center text-green-700">Respect</th>
-                                                        <th className="px-3 py-4 text-center text-amber-700">Bonus</th>
+                                                        <th className="px-3 py-4 text-center">War Hits</th>
+                                                        <th className="px-3 py-4 text-center">Bonuses</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100">
@@ -275,15 +292,25 @@
                                                                 <div className="font-bold text-slate-800">{m.name}</div>
                                                                 <div className="text-[10px] text-slate-400 font-mono">{m.id}</div>
                                                             </td>
-                                                            <td className="px-3 py-3 text-center font-bold text-blue-600 bg-blue-50/10">{m.war_hits}</td>
-                                                            <td className="px-3 py-3 text-center text-slate-600">{m.leaves}</td>
-                                                            <td className="px-3 py-3 text-center text-slate-600">{m.mugs}</td>
-                                                            <td className="px-3 py-3 text-center text-slate-600">{m.hosps}</td>
-                                                            <td className="px-3 py-3 text-center text-red-500">{m.losses}</td>
+                                                            <td className="px-3 py-3 text-center text-slate-600">{m.attacks}</td>
+                                                            <td className="px-3 py-3 text-center font-semibold text-slate-600">
+                                                                {Number(m.score || 0).toFixed(1)}
+                                                            </td>
                                                             <td className="px-3 py-3 text-center font-semibold text-green-600">
                                                                 {Number(m.respect || 0).toFixed(1)}
                                                             </td>
-                                                            <td className="px-3 py-3 text-center font-semibold text-amber-600">{m.bonus_hits}</td>
+                                                            <td className="px-3 py-3 text-center text-slate-600">{m.total}</td>
+                                                            <td className="px-3 py-3 text-center text-slate-600">{m.leaves}</td>
+                                                            <td className="px-3 py-3 text-center text-slate-600">{m.mugs}</td>
+                                                            <td className="px-3 py-3 text-center text-slate-600">{m.hosps}</td>
+                                                            <td className="px-3 py-3 text-center text-slate-600">{m.assists}</td>
+                                                            <td className="px-3 py-3 text-center text-slate-600">{m.retals}</td>
+                                                            <td className="px-3 py-3 text-center text-slate-600">{m.overseas}</td>
+                                                            <td className="px-3 py-3 text-center text-slate-600">{m.draws}</td>
+                                                            <td className="px-3 py-3 text-center text-slate-600">{m.escapes}</td>
+                                                            <td className="px-3 py-3 text-center text-red-500">{m.losses}</td>
+                                                            <td className="px-3 py-3 text-center text-slate-600">{m.war_hits}</td>
+                                                            <td className="px-3 py-3 text-center font-semibold text-amber-600">{m.bonuses}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
