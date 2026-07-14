@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faction Inventory & Loan Tracker</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+            padding: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        header {
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        h1 {
+            margin: 0;
+            color: #ff9900;
+        }
+        .api-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .api-controls input[type="password"] {
+            background-color: #2b2b2b;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            width: 220px;
+        }
+        .api-controls button {
+            background-color: #ff9900;
+            color: #1a1a1a;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .api-controls button:hover {
+            background-color: #e08800;
+        }
+        .remember-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85em;
+            color: #aaa;
+            cursor: pointer;
+        }
+        .status {
+            font-style: italic;
+            margin-bottom: 20px;
+            color: #aaa;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background-color: #222;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+        th {
+            background-color: #333;
+            color: #ff9900;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+        th:hover {
+            background-color: #444;
+        }
+        th::after {
+            content: ' ↕';
+            font-size: 0.8em;
+            color: #777;
+            position: absolute;
+            right: 8px;
+        }
+        th.asc::after {
+            content: ' ▲';
+            color: #ff9900;
+        }
+        th.desc::after {
+            content: ' ▼';
+            color: #ff9900;
+        }
+        tr:hover {
+            background-color: #2a2a2a;
+        }
+        .error {
+            color: #ff4444;
+            font-weight: bold;
+        }
+        .count-badge {
+            background-color: #ff9900;
+            color: #1a1a1a;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .ex-member {
+            color: #888;
+            font-style: italic;
+        }
+        .available {
+            color: #4caf50;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Faction Inventory</h1>
+        <div class="api-controls">
+            <input type="password" id="api-key" placeholder="Enter Torn API Key" aria-label="API Key">
+            <label class="remember-container">
+                <input type="checkbox" id="remember-key"> Remember Key
+            </label>
+            <button onclick="fetchAndRender()">Load Data</button>
+        </div>
+    </header>
+
+    <div id="status" class="status">Please enter your Torn API key above to load faction data.</div>
+
+    <table id="loaned-items-table" style="display: none;">
+        <thead>
+            <tr>
+                <th onclick="sortTable(0)">Item Name</th>
+                <th onclick="sortTable(1)">Category</th>
+                <th onclick="sortTable(2)">Subtype</th>
+                <th onclick="sortTable(3)">Count</th>
+                <th onclick="sortTable(4)">Loaned To</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            <!-- Data injected here -->
+        </tbody>
+    </table>
+
+    <script>
+        let sortDirections = [true, true, true, true, true]; // tracks ASC (true) or DESC (false) for each column
+
+        // Try to load a saved key from local storage on startup
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedKey = localStorage.getItem('torn_api_key');
+            if (savedKey) {
+                document.getElementById('api-key').value = savedKey;
+                document.getElementById('remember-key').checked = true;
+                fetchAndRender();
+            }
+        });
+
+        async function fetchAndRender() {
+            const apiKeyInput = document.getElementById('api-key');
+            const rememberCheckbox = document.getElementById('remember-key');
+            const statusDiv = document.getElementById('status');
+            const table = document.getElementById('loaned-items-table');
+            const tbody = document.getElementById('table-body');
+
+            const apiKey = apiKeyInput.value.trim();
+
+            if (!apiKey) {
+                statusDiv.innerHTML = `<span class="error">Error: Please enter an API key first.</span>`;
+                table.style.display = 'none';
+                return;
+            }
+
+            if (rememberCheckbox.checked) {
+                localStorage.setItem('torn_api_key', apiKey);
+            } else {
+                localStorage.removeItem('torn_api_key');
+            }
+
+            statusDiv.innerHTML = "Fetching faction data...";
+            table.style.display = 'none';
+
+            const INVENTORY_URL = `https://api.torn.com/faction/?key=${apiKey}&comment=TornAPI&selections=armor,temporary,weapons,utilities`;
+            const MEMBERS_URL = `https://api.torn.com/faction/?key=${apiKey}&comment=TornAPI&selections=basic`;
+
+            try {
+                const [invResponse, membersResponse] = await Promise.all([
+                    fetch(INVENTORY_URL),
+                    fetch(MEMBERS_URL)
+                ]);
+
+                if (!invResponse.ok || !membersResponse.ok) {
+                    throw new Error("Failed to reach Torn API endpoints. Check your connection.");
+                }
+
+                const invData = await invResponse.json();
+                const membersData = await membersResponse.json();
+
+                if (invData.error) throw new Error(`Inventory API Error: ${invData.error.error}`);
+                if (membersData.error) throw new Error(`Members API Error: ${membersData.error.error}`);
+
+                // Map member IDs to member names
+                const membersMap = {};
+                if (membersData.members) {
+                    Object.entries(membersData.members).forEach(([id, info]) => {
+                        membersMap[id] = info.name;
+                    });
+                }
+
+                const categories = ['armor', 'temporary', 'weapons', 'utilities'];
+                const collapsedData = {};
+
+                categories.forEach(category => {
+                    const items = invData[category];
+                    if (!items) return;
+
+                    Object.values(items).forEach(item => {
+                        const itemName = item.name || 'Unknown Item';
+                        const subtype = item.type || 'N/A';
+
+                        // 1. Process available stock directly using the API's 'available' property
+                        const availableCount = parseInt(item.available, 10);
+                        if (!isNaN(availableCount) && availableCount > 0) {
+                            const availableKey = `${itemName}|${category}|${subtype}|Available`;
+
+                            if (collapsedData[availableKey]) {
+                                collapsedData[availableKey].count += availableCount;
+                            } else {
+                                collapsedData[availableKey] = {
+                                    name: itemName,
+                                    category: category.charAt(0).toUpperCase() + category.slice(1),
+                                    subtype: subtype,
+                                    loaneeId: 'Available',
+                                    count: availableCount
+                                };
+                            }
+                        }
+
+                        // 2. Process loaned items
+                        let loaneeIds = [];
+                        if (item.loaned_to) {
+                            if (Array.isArray(item.loaned_to)) {
+                                loaneeIds = item.loaned_to;
+                            } else if (typeof item.loaned_to === 'object') {
+                                loaneeIds = Object.values(item.loaned_to);
+                            } else if (typeof item.loaned_to === 'string' && item.loaned_to.includes(',')) {
+                                loaneeIds = item.loaned_to.split(',').map(id => id.trim());
+                            } else {
+                                loaneeIds = [item.loaned_to];
+                            }
+                        }
+
+                        // Hardened numerical evaluation to prevent empty/blank ID rows
+                        loaneeIds = loaneeIds
+                            .map(id => String(id).trim())
+                            .filter(id => {
+                                const parsed = parseInt(id, 10);
+                                return !isNaN(parsed) && parsed > 0;
+                            });
+
+                        loaneeIds.forEach(loaneeId => {
+                            const key = `${itemName}|${category}|${subtype}|${loaneeId}`;
+
+                            if (collapsedData[key]) {
+                                collapsedData[key].count += 1;
+                            } else {
+                                collapsedData[key] = {
+                                    name: itemName,
+                                    category: category.charAt(0).toUpperCase() + category.slice(1),
+                                    subtype: subtype,
+                                    loaneeId: loaneeId,
+                                    count: 1
+                                };
+                            }
+                        });
+                    });
+                });
+
+                const collapsedList = Object.values(collapsedData);
+
+                if (collapsedList.length === 0) {
+                    statusDiv.innerHTML = "No items found in your faction's armory inventory.";
+                } else {
+                    let rowsHtml = '';
+                    collapsedList.forEach(entry => {
+                        let loaneeDisplay = '';
+                        let customSortValue = '';
+
+                        // Priority Sort Value Matrix:
+                        // 0_ prefix: Current Members
+                        // 1_ prefix: Valid Ex-Members (Now filtered cleanly to guarantee a valid numeric ID)
+                        // 2_ prefix: Available Stock (Bubbles naturally to the bottom)
+                        if (membersMap[entry.loaneeId]) {
+                            const memberName = membersMap[entry.loaneeId];
+                            loaneeDisplay = `${memberName} [${entry.loaneeId}]`;
+                            customSortValue = `0_${memberName.toLowerCase()}`;
+                        } else if (entry.loaneeId === 'Available') {
+                            loaneeDisplay = `<span class="available">Armory (Available)</span>`;
+                            customSortValue = `2_${entry.name.toLowerCase()}`;
+                        } else {
+                            loaneeDisplay = `<span class="ex-member">Ex-Member [${entry.loaneeId}]</span>`;
+                            customSortValue = `1_ex_member_${entry.loaneeId}`;
+                        }
+
+                        rowsHtml += `
+                            <tr>
+                                <td><strong>${entry.name}</strong></td>
+                                <td>${entry.category}</td>
+                                <td>${entry.subtype}</td>
+                                <td><span class="count-badge">${entry.count}</span></td>
+                                <td data-sort="${customSortValue}">${loaneeDisplay}</td>
+                            </tr>
+                        `;
+                    });
+
+                    tbody.innerHTML = rowsHtml;
+                    statusDiv.innerHTML = `Successfully loaded ${collapsedList.length} unique item groupings (Available & Loaned).`;
+                    table.style.display = 'table';
+                }
+
+            } catch (err) {
+                statusDiv.innerHTML = `<span class="error">Error: ${err.message}</span>`;
+                console.error(err);
+            }
+        }
+
+        // Sorting Logic
+        function sortTable(columnIndex) {
+            const table = document.getElementById("loaned-items-table");
+            const tbody = document.getElementById("table-body");
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+            const headers = table.querySelectorAll("th");
+
+            const isAscending = sortDirections[columnIndex];
+            sortDirections[columnIndex] = !isAscending;
+
+            headers.forEach((th, index) => {
+                th.classList.remove('asc', 'desc');
+                if (index === columnIndex) {
+                    th.classList.add(isAscending ? 'asc' : 'desc');
+                }
+            });
+
+            rows.sort((rowA, rowB) => {
+                const cellA = rowA.cells[columnIndex];
+                const cellB = rowB.cells[columnIndex];
+
+                let valA = cellA.getAttribute('data-sort') || cellA.textContent.trim();
+                let valB = cellB.getAttribute('data-sort') || cellB.textContent.trim();
+
+                if (columnIndex === 3) { // Sort Count column numerically
+                    return isAscending
+                        ? parseInt(valA, 10) - parseInt(valB, 10)
+                        : parseInt(valB, 10) - parseInt(valA, 10);
+                }
+
+                return isAscending
+                    ? valA.localeCompare(valB)
+                    : valB.localeCompare(valA);
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+    </script>
+</body>
+</html>
