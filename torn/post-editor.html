@@ -6,32 +6,72 @@
   <!-- Load Marked for Markdown parsing -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
-    body { font-family: system-ui, sans-serif; margin: 20px; background: #f4f4f9; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-    textarea { width: 100%; height: 220px; font-family: monospace; box-sizing: border-box; padding: 8px; }
-    .output-box { border: 1px solid #767676; padding: 15px; min-height: 220px; background: #fff; box-sizing: border-box; }
-    label { display: block; margin-bottom: 5px; }
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      margin: 20px; 
+      background: #191919; 
+      color: #e0e0e0; 
+    }
+
+    .grid { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 15px; 
+      margin-bottom: 20px; 
+    }
+
+    textarea { 
+      width: 100%; 
+      height: 250px; 
+      font-family: monospace; 
+      box-sizing: border-box; 
+      padding: 10px; 
+      background: #2b2b2b; 
+      color: #f0f0f0; 
+      border: 1px solid #444; 
+      border-radius: 4px;
+      resize: vertical;
+    }
+
+    /* Styled to match Torn forum dark theme canvas */
+    .output-box { 
+      border: 1px solid #444; 
+      padding: 15px; 
+      min-height: 250px; 
+      background: #222222; 
+      color: #dddddd; 
+      box-sizing: border-box; 
+      border-radius: 4px;
+      overflow-y: auto;
+    }
+
+    label { 
+      display: block; 
+      margin-bottom: 6px; 
+      color: #bbb;
+    }
   </style>
 </head>
 <body>
 
-  <h2>Torn Forum Markdown to Inlined HTML</h2>
+  <h2>Torn Forum Markdown Styler</h2>
 
   <div class="grid">
     <div>
       <label><strong>1. Markdown Input</strong></label>
       <textarea id="markdownInput"># Welcome to the Thread
 
-This is a **test post** with customized CSS styles.
-* Point 1
-* Point 2</textarea>
+This is a **test post** formatted in Markdown with customized inline CSS styles.
+
+* Feature 1: Clean inline HTML output
+* Feature 2: Torn dark background preview</textarea>
     </div>
     <div>
       <label><strong>2. CSS Styles</strong></label>
-      <textarea id="cssInput">h1 { color: #d9534f; border-bottom: 2px solid #ccc; margin-top: 0; }
-p { font-size: 14px; color: #333; }
-strong { color: #0275d8; }
-ul { background-color: #eef2f5; padding: 10px 25px; border-radius: 4px; }</textarea>
+      <textarea id="cssInput">p, li { color: #cccccc; font-size: 14px; line-height: 1.5; }
+h1 { color: #ff5555; border-bottom: 1px solid #444; padding-bottom: 4px; margin-top: 0; }
+strong { color: #ffcc00; }
+ul { background-color: #2a2a2a; padding: 10px 25px; border-radius: 4px; border: 1px solid #333; }</textarea>
     </div>
   </div>
 
@@ -41,7 +81,7 @@ ul { background-color: #eef2f5; padding: 10px 25px; border-radius: 4px; }</texta
       <div id="preview" class="output-box"></div>
     </div>
     <div>
-      <label><strong>4. HTML Code (Paste to Torn)</strong></label>
+      <label><strong>4. HTML Code (Paste into Torn)</strong></label>
       <textarea id="htmlOutput" readonly></textarea>
     </div>
   </div>
@@ -52,26 +92,24 @@ ul { background-color: #eef2f5; padding: 10px 25px; border-radius: 4px; }</texta
     const preview = document.getElementById('preview');
     const htmlOutput = document.getElementById('htmlOutput');
 
-    // Pure Browser CSS Inliner using DOMParser
+    // Pure Browser CSS Inliner using native DOMParser and CSSStyleSheet
     function inlineCSS(htmlString, cssString) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(htmlString, 'text/html');
 
-      // Parse the stylesheet
+      // Create temporary style element to leverage browser's CSS parser
       const styleEl = document.createElement('style');
       styleEl.textContent = cssString;
       document.head.appendChild(styleEl);
       const sheet = styleEl.sheet;
 
       try {
-        // Iterate over CSS rules and apply directly to matching DOM nodes
         const rules = sheet.cssRules || sheet.rules;
         for (let i = 0; i < rules.length; i++) {
           const rule = rules[i];
           if (rule.type === CSSRule.STYLE_RULE) {
             const targets = doc.querySelectorAll(rule.selectorText);
             targets.forEach(el => {
-              // Append style rule preserving pre-existing inline styles
               const existingStyles = el.getAttribute('style') || '';
               const newStyles = rule.style.cssText;
               el.setAttribute('style', existingStyles ? `${existingStyles} ${newStyles}` : newStyles);
@@ -81,7 +119,6 @@ ul { background-color: #eef2f5; padding: 10px 25px; border-radius: 4px; }</texta
       } catch (e) {
         console.error("CSS Parsing error:", e);
       } finally {
-        // Clean up temporary stylesheet element
         document.head.removeChild(styleEl);
       }
 
@@ -89,17 +126,18 @@ ul { background-color: #eef2f5; padding: 10px 25px; border-radius: 4px; }</texta
     }
 
     function convert() {
-      // 1. Render Markdown to HTML via Marked
+      // 1. Render Markdown to raw HTML
       const rawHtml = marked.parse(mdInput.value);
 
-      // 2. Inline the CSS into element style="" attributes
+      // 2. Inline CSS styles directly into matching elements
       const inlined = inlineCSS(rawHtml, cssInput.value);
 
-      // 3. Update Preview and HTML Output
+      // 3. Update preview container and raw HTML textarea
       preview.innerHTML = inlined;
       htmlOutput.value = inlined;
     }
 
+    // Event listeners for real-time live preview
     mdInput.addEventListener('input', convert);
     cssInput.addEventListener('input', convert);
 
