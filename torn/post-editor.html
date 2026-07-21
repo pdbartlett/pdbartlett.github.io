@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Torn Forum Markdown to Inlined HTML</title>
+  <!-- Load Marked for Markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 20px; background: #f4f4f9; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+    textarea { width: 100%; height: 220px; font-family: monospace; box-sizing: border-box; padding: 8px; }
+    .output-box { border: 1px solid #767676; padding: 15px; min-height: 220px; background: #fff; box-sizing: border-box; }
+    label { display: block; margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+
+  <h2>Torn Forum Markdown to Inlined HTML</h2>
+
+  <div class="grid">
+    <div>
+      <label><strong>1. Markdown Input</strong></label>
+      <textarea id="markdownInput"># Welcome to the Thread
+
+This is a **test post** with customized CSS styles.
+* Point 1
+* Point 2</textarea>
+    </div>
+    <div>
+      <label><strong>2. CSS Styles</strong></label>
+      <textarea id="cssInput">h1 { color: #d9534f; border-bottom: 2px solid #ccc; margin-top: 0; }
+p { font-size: 14px; color: #333; }
+strong { color: #0275d8; }
+ul { background-color: #eef2f5; padding: 10px 25px; border-radius: 4px; }</textarea>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <label><strong>3. Rendered Output (Preview)</strong></label>
+      <div id="preview" class="output-box"></div>
+    </div>
+    <div>
+      <label><strong>4. HTML Code (Paste to Torn)</strong></label>
+      <textarea id="htmlOutput" readonly></textarea>
+    </div>
+  </div>
+
+  <script>
+    const mdInput = document.getElementById('markdownInput');
+    const cssInput = document.getElementById('cssInput');
+    const preview = document.getElementById('preview');
+    const htmlOutput = document.getElementById('htmlOutput');
+
+    // Pure Browser CSS Inliner using DOMParser
+    function inlineCSS(htmlString, cssString) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlString, 'text/html');
+
+      // Parse the stylesheet
+      const styleEl = document.createElement('style');
+      styleEl.textContent = cssString;
+      document.head.appendChild(styleEl);
+      const sheet = styleEl.sheet;
+
+      try {
+        // Iterate over CSS rules and apply directly to matching DOM nodes
+        const rules = sheet.cssRules || sheet.rules;
+        for (let i = 0; i < rules.length; i++) {
+          const rule = rules[i];
+          if (rule.type === CSSRule.STYLE_RULE) {
+            const targets = doc.querySelectorAll(rule.selectorText);
+            targets.forEach(el => {
+              // Append style rule preserving pre-existing inline styles
+              const existingStyles = el.getAttribute('style') || '';
+              const newStyles = rule.style.cssText;
+              el.setAttribute('style', existingStyles ? `${existingStyles} ${newStyles}` : newStyles);
+            });
+          }
+        }
+      } catch (e) {
+        console.error("CSS Parsing error:", e);
+      } finally {
+        // Clean up temporary stylesheet element
+        document.head.removeChild(styleEl);
+      }
+
+      return doc.body.innerHTML;
+    }
+
+    function convert() {
+      // 1. Render Markdown to HTML via Marked
+      const rawHtml = marked.parse(mdInput.value);
+
+      // 2. Inline the CSS into element style="" attributes
+      const inlined = inlineCSS(rawHtml, cssInput.value);
+
+      // 3. Update Preview and HTML Output
+      preview.innerHTML = inlined;
+      htmlOutput.value = inlined;
+    }
+
+    mdInput.addEventListener('input', convert);
+    cssInput.addEventListener('input', convert);
+
+    // Initial render call
+    convert();
+  </script>
+</body>
+</html>
