@@ -32,20 +32,53 @@
       resize: vertical;
     }
 
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .theme-toggle-btn {
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .theme-toggle-btn:hover {
+      background: #444;
+    }
+
+    /* Output Box Theme States */
     .output-box {
       border: 1px solid #444;
       padding: 15px;
       min-height: 260px;
-      background: #222222;
-      color: #dddddd;
       box-sizing: border-box;
       border-radius: 4px;
       overflow-y: auto;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    /* Torn Dark Canvas (Default) */
+    .output-box.dark-mode {
+      background: #222222;
+      color: #dddddd;
+    }
+
+    /* Torn Light Canvas */
+    .output-box.light-mode {
+      background: #f4f4f4;
+      color: #111111;
+      border-color: #ccc;
     }
 
     label {
       display: block;
-      margin-bottom: 6px;
       color: #bbb;
     }
   </style>
@@ -57,40 +90,49 @@
   <div class="grid">
     <div>
       <label><strong>1. Markdown Input</strong></label>
-      <textarea id="markdownInput"># Main Header {#title .highlight}
+      <textarea id="markdownInput"># Header Title <span class="meta">v1.0</span>
 
-This paragraph has a special class. {.accent}
+<div class="header-line">
+  <span>Left Title Text</span>
+  <span>Right Meta Text</span>
+</div>
 
-* Point 1 {#item1}
-* Point 2 {.alert}
+This is a paragraph formatted with Markdown and custom CSS.
 
-### Section Two
-
-Blah, blah, blah...</textarea>
+* Point 1 {.accent}
+* Point 2</textarea>
     </div>
     <div>
       <label><strong>2. CSS Styles</strong></label>
-      <textarea id="cssInput">/* Targets standard tags */
-p { color: #cccccc; font-size: 14px; line-height: 1.5; }
+      <textarea id="cssInput">p, li { font-size: 14px; line-height: 1.5; }
+h1 { color: #ff5555; border-bottom: 1px solid #444; margin-top: 0; }
 
-/* Targets specific classes applied via Markdown attributes */
-.highlight { color: #ffcc00; border-bottom: 2px solid #ffcc00; }
-.accent { color: #5bc0de; font-style: italic; }
-.alert { color: #d9534f; font-weight: bold; }
+.header-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #333333;
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
 
-/* Targets IDs applied via Markdown attributes */
-#title { font-variant: small-caps; }
-#item1 { color: #5cb85c; }</textarea>
+.meta { float: right; font-size: 12px; color: #888888; }
+.accent { color: #ffcc00; font-weight: bold; }</textarea>
     </div>
   </div>
 
   <div class="grid">
     <div>
-      <label><strong>3. Rendered Output (Preview)</strong></label>
-      <div id="preview" class="output-box"></div>
+      <div class="preview-header">
+        <label><strong>3. Rendered Output (Preview)</strong></label>
+        <button id="toggleThemeBtn" class="theme-toggle-btn">Switch to Light Mode Preview</button>
+      </div>
+      <div id="preview" class="output-box dark-mode"></div>
     </div>
     <div>
-      <label><strong>4. HTML Code (Paste into Torn)</strong></label>
+      <label style="margin-bottom: 10px;"><strong>4. HTML Code (Paste into Torn)</strong></label>
       <textarea id="htmlOutput" readonly></textarea>
     </div>
   </div>
@@ -104,7 +146,6 @@ p { color: #cccccc; font-size: 14px; line-height: 1.5; }
       const classes = [];
       const ids = [];
 
-      // Match #ids and .classes
       const tokens = attrStr.trim().split(/\s+/);
       tokens.forEach(token => {
         if (token.startsWith('#')) {
@@ -128,10 +169,8 @@ p { color: #cccccc; font-size: 14px; line-height: 1.5; }
     marked.use({
       renderer: {
         heading(headingObj) {
-          // marked v12+ passes an object: { text, depth, raw }
           const text = headingObj.text || '';
           const depth = headingObj.depth || 1;
-
           const match = text.match(attrRegex);
           if (match) {
             const cleanText = text.replace(attrRegex, '');
@@ -194,7 +233,7 @@ p { color: #cccccc; font-size: 14px; line-height: 1.5; }
         document.head.removeChild(styleEl);
       }
 
-      // Strip temporary id and class attributes so Torn gets clean inline styles
+      // Strip temporary attributes
       doc.querySelectorAll('*').forEach(el => {
         el.removeAttribute('class');
         el.removeAttribute('id');
@@ -207,6 +246,7 @@ p { color: #cccccc; font-size: 14px; line-height: 1.5; }
     const cssInput = document.getElementById('cssInput');
     const preview = document.getElementById('preview');
     const htmlOutput = document.getElementById('htmlOutput');
+    const toggleBtn = document.getElementById('toggleThemeBtn');
 
     function convert() {
       const rawHtml = marked.parse(mdInput.value);
@@ -215,6 +255,19 @@ p { color: #cccccc; font-size: 14px; line-height: 1.5; }
       preview.innerHTML = inlined;
       htmlOutput.value = inlined;
     }
+
+    // Toggle Preview Theme (Dark <-> Light)
+    toggleBtn.addEventListener('click', () => {
+      if (preview.classList.contains('dark-mode')) {
+        preview.classList.remove('dark-mode');
+        preview.classList.add('light-mode');
+        toggleBtn.textContent = 'Switch to Dark Mode Preview';
+      } else {
+        preview.classList.remove('light-mode');
+        preview.classList.add('dark-mode');
+        toggleBtn.textContent = 'Switch to Light Mode Preview';
+      }
+    });
 
     mdInput.addEventListener('input', convert);
     cssInput.addEventListener('input', convert);
