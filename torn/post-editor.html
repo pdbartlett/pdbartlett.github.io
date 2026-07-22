@@ -64,7 +64,42 @@
     .output-box.dark-mode { background: #222222; color: #dddddd; }
     .output-box.light-mode { background: #f4f4f4; color: #111111; border-color: #ccc; }
 
+    /* Notes Box Styling */
+    .notes-box {
+      border: 1px solid #333;
+      background: #222;
+      border-radius: 6px;
+      padding: 15px 20px;
+      margin-top: 10px;
+    }
+
+    .notes-box h3 {
+      margin-top: 0;
+      color: #ff5555;
+      border-bottom: 1px solid #333;
+      padding-bottom: 6px;
+      font-size: 16px;
+    }
+
+    .notes-box ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #bbb;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .notes-box code {
+      background: #111;
+      color: #ffcc00;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+
     label { display: block; color: #bbb; }
+    a { color: #0dd; }
   </style>
 </head>
 <body>
@@ -138,11 +173,23 @@ a { color: #5bc0de; text-decoration: none; font-weight: bold; }</textarea>
     </div>
   </div>
 
+  <!-- Instructions & Notes Section -->
+  <div class="notes-box">
+    <h3>Instructions & Quick Reference</h3>
+    <ul>
+      <li><strong>Purpose:</strong> To make it as easy and quick as possible to produce nice looking forum posts, messages and newsletters in Torn.</li>
+      <li><strong>Why Markdown?</strong> It's easy and more compact to write than HTML, but permits HTML instead if you prefer. <a href="https://www.markdownguide.org/cheat-sheet/">Here</a> is a cheat sheet to get you started.</li>
+      <li><strong>Why CSS?</strong> To allow consistent styling without repeating yourself. Unfortunately Torn only allows style information to be use inside the HTML tags, so this tool applies the specifed CSS rules inline after converting the Markdown to HTML. <a href="https://web.stanford.edu/group/csp/cs21/csscheatsheet.pdf">Here</a> is another cheat sheet, this time for CSS.</li>
+      <li><strong>Post Container:</strong> All rendered Markdown is automatically wrapped in a <code>.post-card</code> container. Target <code>.post-card</code> in CSS to set outer margins, padding, and background color.</li>
+      <li><strong>Inline Attribute Syntax:</strong> Append <code>{#id}</code>, <code>{.class}</code> or a mix of the two to the end of headings or paragraphs to target them specifically in your CSS (e.g., <code># Section Title {.alert}</code>).</li>
+      <li><strong>HTML Blocks:</strong> Keep inline HTML tags (like <code>&lt;div class="header-line"&gt;text&lt;/div&gt;</code>) closed on a single line so they don't interfere with Markdown parsing.</li>
+      <li><strong>Theme Compatibility:</strong> Use the <em>Switch Preview Theme</em> button to check legibility against both dark and light Torn themes. Ensure text colors pair with explicit element backgrounds to force the issue, at the expense of ignoring user preferences, or use  midtones which work well against either dark or light backgrounds.</li>
+    </ul>
+  </div>
+
   <script>
-    // Configure marked to handle GFM predictably
     marked.setOptions({ gfm: true, breaks: true });
 
-    // Helper to parse {#id .class} attributes
     function parseAttributes(attrStr) {
       if (!attrStr) return '';
       const classes = [];
@@ -160,14 +207,12 @@ a { color: #5bc0de; text-decoration: none; font-weight: bold; }</textarea>
       return attrOutput;
     }
 
-    // Properly delegate token parsing through marked's internal parser
     const attrRegex = /\s*\{([^}]+)\}\s*$/;
 
     marked.use({
       renderer: {
         heading(token) {
           const depth = token.depth;
-          // Use this.parser.parseInline to render links/bold inside headers
           const content = this.parser.parseInline(token.tokens);
           const match = content.match(attrRegex);
           if (match) {
@@ -190,7 +235,6 @@ a { color: #5bc0de; text-decoration: none; font-weight: bold; }</textarea>
       }
     });
 
-    // Native DOMParser CSS Inliner
     function inlineCSS(htmlString, cssString) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(htmlString, 'text/html');
@@ -219,7 +263,6 @@ a { color: #5bc0de; text-decoration: none; font-weight: bold; }</textarea>
         document.head.removeChild(styleEl);
       }
 
-      // Strip temporary id/class markers
       doc.querySelectorAll('*').forEach(el => {
         el.removeAttribute('class');
         el.removeAttribute('id');
@@ -235,16 +278,10 @@ a { color: #5bc0de; text-decoration: none; font-weight: bold; }</textarea>
     const toggleBtn = document.getElementById('toggleThemeBtn');
 
     function convert() {
-      // 1. Render Markdown to HTML
       let rawHtml = marked.parse(mdInput.value);
-
-      // 2. Programmatically wrap in outer .post-card container for continuous background
       rawHtml = `<div class="post-card">${rawHtml}</div>`;
-
-      // 3. Inline CSS rules
       const inlined = inlineCSS(rawHtml, cssInput.value);
 
-      // 4. Update preview and raw text
       preview.innerHTML = inlined;
       htmlOutput.value = inlined;
     }
